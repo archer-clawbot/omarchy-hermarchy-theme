@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build original Hermes // Nous command-environment artwork."""
+"""Build original Hermarchy command-environment artwork."""
 from pathlib import Path
 import math
 import subprocess
@@ -38,7 +38,7 @@ def frame() -> str:
 <path d="M80 128H3760M80 2272H3760" stroke="{BORDER}" stroke-width="2"/>
 <path d="M128 80V2320M3712 80V2320" stroke="{BORDER}" stroke-width="2"/>
 <g fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="19" letter-spacing="5">
- <text x="108" y="112">HERMES // NOUS</text>
+ <text x="108" y="112">HERMARCHY</text>
  <text x="3732" y="112" text-anchor="end">AGENT ENVIRONMENT 01</text>
 </g>
 <circle cx="3660" cy="105" r="5" fill="{CYAN}"/>
@@ -56,18 +56,18 @@ def wallpaper_one() -> str:
 <circle cx="1920" cy="1050" r="980" fill="url(#halo)"/>
 {lines(1920,1050,370,940,96,CYAN,.045)}
 <g text-anchor="middle">
- <text x="1920" y="925" fill="{WHITE}" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="186" font-weight="500" letter-spacing="66">HERMES</text>
+ <text x="1920" y="925" fill="{WHITE}" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="186" font-weight="500" letter-spacing="54">HERMARCHY</text>
  <text x="1920" y="1055" fill="{CYAN}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="36" letter-spacing="18">/\\-_=+|&lt; -/= ~:*-/</text>
  <text x="1920" y="1195" fill="{SECONDARY}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="26" letter-spacing="12">AGENT ENVIRONMENT</text>
- <text x="1920" y="1250" fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">NOUS RESEARCH</text>
+ <text x="1920" y="1250" fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">OMARCHY AGENT THEME</text>
 </g>
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="21" letter-spacing="4">
- <text x="170" y="1850" fill="{CYAN}">HERMES::NODE</text>
+ <text x="170" y="1850" fill="{CYAN}">HERMARCHY::NODE</text>
  <text x="170" y="1900" fill="{MUTED}">STATE</text><text x="380" y="1900" fill="{WHITE}">READY</text>
  <text x="170" y="1950" fill="{MUTED}">HOST</text><text x="380" y="1950" fill="{WHITE}">OMARCHY</text>
  <text x="170" y="2000" fill="{MUTED}">MODE</text><text x="380" y="2000" fill="{WHITE}">LOCAL</text>
- <text x="3670" y="1940" fill="{WHITE}" text-anchor="end">NOUS RESEARCH</text>
- <text x="3670" y="1990" fill="{MUTED}" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
+ <text x="3670" y="1940" fill="{WHITE}" text-anchor="end">HERMARCHY</text>
+ <text x="3670" y="1990" fill="{MUTED}" text-anchor="end">LOCAL AGENT ENVIRONMENT</text>
 </g>
 </svg>'''
 
@@ -87,7 +87,7 @@ def wallpaper_two() -> str:
 {node_markup()}
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace">
  <text x="190" y="520" fill="{CYAN}" font-size="25" letter-spacing="7">// ROUTING MAP</text>
- <text x="190" y="760" fill="{WHITE}" font-size="116" letter-spacing="25">HERMES</text>
+ <text x="190" y="760" fill="{WHITE}" font-size="116" letter-spacing="20">HERMARCHY</text>
  <text x="190" y="880" fill="{WHITE}" font-size="116" letter-spacing="25">NODE</text>
  <path d="M190 950H1180" stroke="{BORDER}" stroke-width="2"/><path d="M190 950H480" stroke="{CYAN}" stroke-width="3"/>
  <text x="190" y="1050" fill="{MUTED}" font-size="22" letter-spacing="5">LOCAL AGENT CONTROL PLANE</text>
@@ -124,13 +124,13 @@ def wallpaper_three() -> str:
 
 wallpapers = [wallpaper_one(), wallpaper_two(), wallpaper_three()]
 for index, svg in enumerate(wallpapers, 1):
-    source = SOURCE / f"hermes-{index}.svg"
-    output = BACKGROUNDS / ("01-hermes-command.png" if index == 1 else f"hermes-{index}.png")
+    source = SOURCE / f"hermarchy-{index}.svg"
+    output = BACKGROUNDS / ("01-hermarchy-command.png" if index == 1 else f"hermarchy-{index}.png")
     source.write_text(svg)
     subprocess.run(["rsvg-convert", "-w", str(W), "-h", str(H), str(source), "-o", str(output)], check=True)
 
 unlock = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="288" viewBox="0 0 1024 288">
-<text x="512" y="112" fill="{WHITE}" text-anchor="middle" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="76" letter-spacing="28">HERMES</text>
+<text x="512" y="112" fill="{WHITE}" text-anchor="middle" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="76" letter-spacing="20">HERMARCHY</text>
 <text x="512" y="178" fill="{CYAN}" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="24" letter-spacing="10">/\\-_=+|&lt; -/= ~:*-/</text>
 <text x="512" y="238" fill="{MUTED}" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="15" letter-spacing="7">NODE LOCKED // AUTHENTICATE</text>
 </svg>'''

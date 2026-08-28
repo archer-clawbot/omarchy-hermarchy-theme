@@ -7,22 +7,22 @@ installed automatically.
 Add this module to your Waybar configuration:
 
 ```jsonc
-"custom/hermes": {
-  "exec": "/path/to/omarchy-hermes-theme/extras/waybar/hermes-status.sh",
+"custom/hermarchy": {
+  "exec": "/path/to/omarchy-hermarchy-theme/extras/waybar/hermarchy-status.sh",
   "return-type": "json",
   "interval": 5
 }
 ```
 
-Then include `custom/hermes` in the desired module list. Suggested CSS:
+Then include `custom/hermarchy` in the desired module list. Suggested CSS:
 
 ```css
-#custom-hermes {
+#custom-hermarchy {
   color: #61D6FF;
   font-family: "IBM Plex Mono";
   letter-spacing: 0.08em;
 }
-#custom-hermes.offline { color: #606468; }
+#custom-hermarchy.offline { color: #606468; }
 ```
 
 The module only reports the local `hermes-gateway.service` state. It neither

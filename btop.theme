@@ -1,4 +1,4 @@
-# Hermes // Nous — monochrome telemetry with semantic state color
+# Hermarchy — monochrome telemetry with semantic state color
 
 # Main background, empty means terminal background
 theme[main_bg]=""

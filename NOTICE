@@ -1,15 +1,9 @@
-Hermes // Nous for Omarchy is an unofficial community theme.
+Hermarchy for Omarchy is an independent community theme.
 
-Hermes, Nous Research, their names, logos, and associated marks are the
-property of their respective owners. The MIT License in this repository covers
-the original theme code and artwork but does not grant rights to use
-third-party trademarks in a way that implies sponsorship, endorsement, or
-official affiliation.
+The theme name, original code, and generated artwork do not use third-party
+names, logos, or artwork as their identity. Any software service names that
+appear in optional integration scripts are factual interoperability references
+only and do not imply affiliation, sponsorship, or endorsement.
 
-Visual inspiration references:
-- https://hermes-agent.nousresearch.com/
-- https://portal.nousresearch.com/
-
-No images or other binary assets from those websites are redistributed here.
 All bundled wallpaper and lock-screen artwork is an original geometric and
 typographic composition generated from the SVG sources under assets/source/.

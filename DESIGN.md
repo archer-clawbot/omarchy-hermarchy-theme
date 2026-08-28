@@ -1,9 +1,8 @@
-# Hermes // Nous Design System
+# Hermarchy Design System
 
 ## Premise
 
-Omarchy is the shell. Hermes is the intelligence layer. Nous is the visual
-language.
+Omarchy is the shell. Hermarchy is the independent visual system.
 
 The environment should resemble a UNIX research workstation or mission-control
 instrument: legible, restrained, stateful, and almost entirely opaque. It must
@@ -24,7 +23,7 @@ metadata, and inactive controls. Borders are hairlines, not glowing frames.
 
 ### Agent
 
-Hermes cyan (`#61D6FF`) marks active intelligence: the cursor, current agent
+Cyan (`#61D6FF`) marks active intelligence: the cursor, current agent
 state, focused launcher result, live telemetry, or an executing operation.
 Bright cyan (`#8DE4FF`) is reserved for immediate focus.
 
@@ -43,7 +42,7 @@ system identifiers, not ordinary prose.
 Recommended hierarchy:
 
 ```text
-HERMES                product/system identity
+HERMARCHY             theme identity
 Agent environment     human-readable surface title
 MODEL / STATUS        metadata label
 Gateway active        human-readable state
@@ -65,9 +64,9 @@ Hyprland behavior.
 
 ## Wallpaper system
 
-1. **Hermes Command** — flagship boot/command environment with a low-opacity
+1. **Hermarchy Command** — flagship boot/command environment with a low-opacity
    radial routing field.
-2. **Hermes Node** — asymmetric local-agent routing map with negative space.
+2. **Hermarchy Node** — asymmetric local-agent routing map with negative space.
 3. **Capabilities** — numbered Connect, Remember, Schedule, Delegate system
    blocks.
 
@@ -92,10 +91,10 @@ A public Omarchy theme must remain safe and portable. It does not:
 - edit `/usr/share/omarchy` or `/usr/bin`;
 - replace package-owned Quickshell components;
 - rewrite a user's prompt or browser homepage;
-- start Hermes services;
+- start agent services;
 - install custom fonts or icons;
 - change compositor behavior.
 
 Optional status scripts are inspectable, user-owned, and read-only. This keeps
-the gallery theme installable while leaving room for a deeper Hermes-native
-integration on systems that explicitly opt in.
+the gallery theme installable while leaving room for deeper agent integration
+on systems that explicitly opt in.

@@ -4,7 +4,7 @@
 <path d="M80 128H3760M80 2272H3760" stroke="#272B2F" stroke-width="2"/>
 <path d="M128 80V2320M3712 80V2320" stroke="#272B2F" stroke-width="2"/>
 <g fill="#606468" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="19" letter-spacing="5">
- <text x="108" y="112">HERMES // NOUS</text>
+ <text x="108" y="112">HERMARCHY</text>
  <text x="3732" y="112" text-anchor="end">AGENT ENVIRONMENT 01</text>
 </g>
 <circle cx="3660" cy="105" r="5" fill="#61D6FF"/>
@@ -13,7 +13,7 @@
 <g stroke="#61D6FF" stroke-width="2" opacity=".22"><line x1="2540" y1="540" x2="3000" y2="420"/><line x1="3000" y1="420" x2="3390" y2="700"/><line x1="3390" y1="700" x2="3240" y2="1130"/><line x1="3240" y1="1130" x2="3490" y2="1540"/><line x1="3490" y1="1540" x2="2990" y2="1840"/><line x1="2990" y1="1840" x2="2520" y2="1630"/><line x1="2520" y1="1630" x2="2360" y2="1180"/><line x1="2360" y1="1180" x2="2540" y2="540"/><line x1="2540" y1="540" x2="2780" y2="990"/><line x1="2780" y1="990" x2="3000" y2="420"/><line x1="2780" y1="990" x2="3050" y2="1310"/><line x1="3050" y1="1310" x2="3240" y2="1130"/><line x1="3050" y1="1310" x2="2990" y2="1840"/><line x1="3050" y1="1310" x2="2520" y2="1630"/></g><g fill="#08090A" stroke="#61D6FF" stroke-width="3" opacity=".72"><circle cx="2540" cy="540" r="9"/><circle cx="3000" cy="420" r="9"/><circle cx="3390" cy="700" r="9"/><circle cx="3240" cy="1130" r="9"/><circle cx="3490" cy="1540" r="9"/><circle cx="2990" cy="1840" r="9"/><circle cx="2520" cy="1630" r="9"/><circle cx="2360" cy="1180" r="9"/><circle cx="2780" cy="990" r="15"/><circle cx="3050" cy="1310" r="15"/></g>
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace">
  <text x="190" y="520" fill="#61D6FF" font-size="25" letter-spacing="7">// ROUTING MAP</text>
- <text x="190" y="760" fill="#F1F1EC" font-size="116" letter-spacing="25">HERMES</text>
+ <text x="190" y="760" fill="#F1F1EC" font-size="116" letter-spacing="20">HERMARCHY</text>
  <text x="190" y="880" fill="#F1F1EC" font-size="116" letter-spacing="25">NODE</text>
  <path d="M190 950H1180" stroke="#272B2F" stroke-width="2"/><path d="M190 950H480" stroke="#61D6FF" stroke-width="3"/>
  <text x="190" y="1050" fill="#606468" font-size="22" letter-spacing="5">LOCAL AGENT CONTROL PLANE</text>

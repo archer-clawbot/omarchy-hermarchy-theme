@@ -4,7 +4,7 @@
 <path d="M80 128H3760M80 2272H3760" stroke="#272B2F" stroke-width="2"/>
 <path d="M128 80V2320M3712 80V2320" stroke="#272B2F" stroke-width="2"/>
 <g fill="#606468" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="19" letter-spacing="5">
- <text x="108" y="112">HERMES // NOUS</text>
+ <text x="108" y="112">HERMARCHY</text>
  <text x="3732" y="112" text-anchor="end">AGENT ENVIRONMENT 01</text>
 </g>
 <circle cx="3660" cy="105" r="5" fill="#61D6FF"/>

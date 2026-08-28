@@ -12,8 +12,8 @@ else
   gateway="${muted}OFFLINE${reset}"
 fi
 
-printf '\n%s          /\\-_=+|< -/= ~:*-/\n\n%s             H E R M E S%s\n\n' "$cyan" "$white" "$reset"
-printf '%sAGENT     %sHermes%s\n' "$muted" "$white" "$reset"
+printf '\n%s          /\\-_=+|< -/= ~:*-/\n\n%s          H E R M A R C H Y%s\n\n' "$cyan" "$white" "$reset"
+printf '%sTHEME     %sHermarchy%s\n' "$muted" "$white" "$reset"
 printf '%sGATEWAY   %b\n' "$muted" "$gateway"
 printf '%sNODE      %sOMARCHY-01%s\n\n' "$muted" "$white" "$reset"
 printf '%s────────────────────────────────────────%s\n\n' "$muted" "$reset"

@@ -1,4 +1,4 @@
-# Hermes // Nous — command environment
+# Hermarchy — command environment
 # 95% monochrome; cyan appears only as machine/agent state.
 mode = "dark"
 
@@ -9,7 +9,7 @@ background = "#08090A"
 selection_foreground = "#F1F1EC"
 selection_background = "#26333A"
 
-hermes_signal = "#61D6FF"
+agent_signal = "#61D6FF"
 active_signal = "#8DE4FF"
 selection = "#26333A"
 muted = "#606468"
