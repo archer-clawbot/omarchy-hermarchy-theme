@@ -1,84 +1,139 @@
 #!/usr/bin/env python3
-"""Generate original Hermes/Nous wallpaper and gallery preview assets."""
+"""Build original Hermes // Nous command-environment artwork."""
 from pathlib import Path
 import math
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-BG = ROOT / "backgrounds"
-SOURCE = ROOT / "assets" / "source"
-BG.mkdir(parents=True, exist_ok=True)
+SOURCE = ROOT / "assets/source"
+BACKGROUNDS = ROOT / "backgrounds"
+W, H = 3840, 2400
 SOURCE.mkdir(parents=True, exist_ok=True)
+BACKGROUNDS.mkdir(parents=True, exist_ok=True)
 
-W, H = 3840, 2160
+BG = "#08090A"
+SURFACE = "#101214"
+BORDER = "#272B2F"
+WHITE = "#F1F1EC"
+SECONDARY = "#9B9E9F"
+MUTED = "#606468"
+CYAN = "#61D6FF"
+BRIGHT = "#8DE4FF"
 
-def rays(cx, cy, radius, count, color, opacity, phase: float = 0.0):
-    out=[]
+
+def lines(cx: int, cy: int, inner: int, outer: int, count: int, color: str, opacity: float) -> str:
+    result = []
     for i in range(count):
-        a=phase + i*2*math.pi/count
-        inner=radius*0.42
-        x1=cx+math.cos(a)*inner; y1=cy+math.sin(a)*inner
-        x2=cx+math.cos(a)*radius; y2=cy+math.sin(a)*radius
-        out.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}"/>')
-    return f'<g stroke="{color}" stroke-width="2" opacity="{opacity}">' + ''.join(out) + '</g>'
+        a = 2 * math.pi * i / count
+        result.append(
+            f'<line x1="{cx + math.cos(a)*inner:.1f}" y1="{cy + math.sin(a)*inner:.1f}" '
+            f'x2="{cx + math.cos(a)*outer:.1f}" y2="{cy + math.sin(a)*outer:.1f}"/>'
+        )
+    return f'<g stroke="{color}" stroke-width="2" opacity="{opacity}">' + "".join(result) + "</g>"
 
-def nodes(cx, cy):
-    pts=[(-520,-290),(-300,-500),(0,-610),(330,-460),(560,-180),(510,190),(260,470),(-80,570),(-390,390),(-590,70),(-250,-100),(230,-140),(150,210),(-180,240)]
-    links=[(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(9,0),(0,10),(10,11),(11,4),(10,13),(13,12),(12,11),(13,8),(12,6)]
-    lines=''.join(f'<line x1="{cx+pts[a][0]}" y1="{cy+pts[a][1]}" x2="{cx+pts[b][0]}" y2="{cy+pts[b][1]}"/>' for a,b in links)
-    circles=''.join(f'<circle cx="{cx+x}" cy="{cy+y}" r="{9 if i<10 else 13}"/>' for i,(x,y) in enumerate(pts))
-    return f'<g stroke="#EDFF45" stroke-width="3" fill="#0000F2">{lines}{circles}</g>'
 
-def wallpaper(variant):
-    if variant==1:
-        title, sub = "HERMES", "THE AGENT THAT GROWS WITH YOU"
-        cx,cy=2670,1080
-    elif variant==2:
-        title, sub = "NOUS // HERMES", "ONE AGENT · ONE MEMORY · EVERY SURFACE"
-        cx,cy=1920,1080
-    else:
-        title, sub = "HERMES // 03", "CONNECT · REMEMBER · SCHEDULE · DELEGATE"
-        cx,cy=1200,1080
-    align = 'start' if variant==1 else ('middle' if variant==2 else 'end')
-    tx = 300 if variant==1 else (1920 if variant==2 else 3540)
-    graphic = f'''{rays(cx,cy,820,96,"#EDFF45",0.28,0.01)}
-    {rays(cx,cy,660,48,"#EDFF45",0.14,0.04)}
-    {nodes(cx,cy)}
-    <circle cx="{cx}" cy="{cy}" r="220" fill="none" stroke="#F5F5F5" stroke-width="5"/>
-    <circle cx="{cx}" cy="{cy}" r="166" fill="#0000F2" opacity="0.88"/>
-    <path d="M {cx-102} {cy+58} C {cx-30} {cy+8}, {cx-58} {cy-72}, {cx} {cy-120} C {cx+58} {cy-72}, {cx+30} {cy+8}, {cx+102} {cy+58} M {cx} {cy-128} V {cy+128}" fill="none" stroke="#F5F5F5" stroke-width="13" stroke-linecap="round"/>
-    <path d="M {cx-34} {cy-92} L {cx-112} {cy-146} L {cx-80} {cy-56} M {cx+34} {cy-92} L {cx+112} {cy-146} L {cx+80} {cy-56}" fill="none" stroke="#EDFF45" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="{cx}" cy="{cy-145}" r="16" fill="#EDFF45"/>'''
+def frame() -> str:
+    return f'''
+<rect width="{W}" height="{H}" fill="{BG}"/>
+<path d="M80 128H3760M80 2272H3760" stroke="{BORDER}" stroke-width="2"/>
+<path d="M128 80V2320M3712 80V2320" stroke="{BORDER}" stroke-width="2"/>
+<g fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="19" letter-spacing="5">
+ <text x="108" y="112">HERMES // NOUS</text>
+ <text x="3732" y="112" text-anchor="end">AGENT ENVIRONMENT 01</text>
+</g>
+<circle cx="3660" cy="105" r="5" fill="{CYAN}"/>
+'''
+
+
+def wallpaper_one() -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
 <defs>
- <radialGradient id="glow"><stop stop-color="#0000F2" stop-opacity=".26"/><stop offset="1" stop-color="#0000F2" stop-opacity="0"/></radialGradient>
- <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#F5F5F5" stroke-opacity=".026" stroke-width="1"/></pattern>
- <filter id="soft"><feGaussianBlur stdDeviation="28"/></filter>
+ <pattern id="grid" width="96" height="96" patternUnits="userSpaceOnUse"><path d="M96 0H0V96" fill="none" stroke="{WHITE}" stroke-opacity=".018"/></pattern>
+ <radialGradient id="halo"><stop stop-color="{CYAN}" stop-opacity=".055"/><stop offset="1" stop-color="{CYAN}" stop-opacity="0"/></radialGradient>
 </defs>
-<rect width="100%" height="100%" fill="#0000F2"/>
-<rect width="100%" height="100%" fill="url(#grid)"/>
-<circle cx="{cx}" cy="{cy}" r="1150" fill="url(#glow)" filter="url(#soft)"/>
-<path d="M0 175 H3840 M0 1985 H3840" stroke="#EDFF45" stroke-opacity=".28" stroke-width="2"/>
-{graphic}
-<g fill="#F5F5F5" text-anchor="{align}">
- <text x="{tx}" y="{1930 if variant==2 else 360}" font-family="DejaVu Serif,serif" font-size="{148 if variant==2 else 132}" letter-spacing="7">{title}</text>
- <text x="{tx}" y="{2025 if variant==2 else 435}" font-family="DejaVu Sans Mono,monospace" font-size="30" letter-spacing="6" fill="#EDFF45">{sub}</text>
+{frame()}
+<rect x="128" y="128" width="3584" height="2144" fill="url(#grid)"/>
+<circle cx="1920" cy="1050" r="980" fill="url(#halo)"/>
+{lines(1920,1050,370,940,96,CYAN,.045)}
+<g text-anchor="middle">
+ <text x="1920" y="925" fill="{WHITE}" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="186" font-weight="500" letter-spacing="66">HERMES</text>
+ <text x="1920" y="1055" fill="{CYAN}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="36" letter-spacing="18">/\\-_=+|&lt; -/= ~:*-/</text>
+ <text x="1920" y="1195" fill="{SECONDARY}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="26" letter-spacing="12">AGENT ENVIRONMENT</text>
+ <text x="1920" y="1250" fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">NOUS RESEARCH</text>
 </g>
-<g font-family="DejaVu Sans Mono,monospace" font-size="22" fill="#8C8CA7" letter-spacing="4"><text x="120" y="120">NOUS RESEARCH</text><text x="3300" y="2070">OPEN SOURCE // MIT</text></g>
+<g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="21" letter-spacing="4">
+ <text x="170" y="2010" fill="{CYAN}">HERMES::NODE</text>
+ <text x="170" y="2060" fill="{MUTED}">STATE</text><text x="380" y="2060" fill="{WHITE}">READY</text>
+ <text x="170" y="2110" fill="{MUTED}">HOST</text><text x="380" y="2110" fill="{WHITE}">OMARCHY</text>
+ <text x="170" y="2160" fill="{MUTED}">MODE</text><text x="380" y="2160" fill="{WHITE}">LOCAL</text>
+ <text x="3670" y="2100" fill="{WHITE}" text-anchor="end">NOUS RESEARCH</text>
+ <text x="3670" y="2150" fill="{MUTED}" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
+</g>
 </svg>'''
 
-for i in range(1,4):
-    (SOURCE/f"hermes-{i}.svg").write_text(wallpaper(i))
 
-unlock='''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="288" viewBox="0 0 1024 288">
-<g transform="translate(58 18)">
- <circle cx="126" cy="126" r="116" fill="#0000F2"/>
- <circle cx="126" cy="126" r="92" fill="none" stroke="#F5F5F5" stroke-width="4"/>
- <path d="M70 158 C110 130 94 84 126 58 C158 84 142 130 182 158 M126 54V200" fill="none" stroke="#F5F5F5" stroke-width="10" stroke-linecap="round"/>
- <path d="M104 78L66 48L82 98M148 78L186 48L170 98" fill="none" stroke="#EDFF45" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="126" cy="45" r="12" fill="#EDFF45"/>
+def node_markup() -> str:
+    pts = [(2540,540),(3000,420),(3390,700),(3240,1130),(3490,1540),(2990,1840),(2520,1630),(2360,1180),(2780,990),(3050,1310)]
+    edges = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,0),(0,8),(8,1),(8,9),(9,3),(9,5),(9,6)]
+    e = "".join(f'<line x1="{pts[a][0]}" y1="{pts[a][1]}" x2="{pts[b][0]}" y2="{pts[b][1]}"/>' for a,b in edges)
+    n = "".join(f'<circle cx="{x}" cy="{y}" r="{9 if i not in (8,9) else 15}"/>' for i,(x,y) in enumerate(pts))
+    return f'<g stroke="{CYAN}" stroke-width="2" opacity=".22">{e}</g><g fill="{BG}" stroke="{CYAN}" stroke-width="3" opacity=".72">{n}</g>'
+
+
+def wallpaper_two() -> str:
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+{frame()}
+{lines(2920,1120,260,1120,120,WHITE,.026)}
+{node_markup()}
+<g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace">
+ <text x="190" y="520" fill="{CYAN}" font-size="25" letter-spacing="7">// ROUTING MAP</text>
+ <text x="190" y="760" fill="{WHITE}" font-size="116" letter-spacing="25">HERMES</text>
+ <text x="190" y="880" fill="{WHITE}" font-size="116" letter-spacing="25">NODE</text>
+ <path d="M190 950H1180" stroke="{BORDER}" stroke-width="2"/><path d="M190 950H480" stroke="{CYAN}" stroke-width="3"/>
+ <text x="190" y="1050" fill="{MUTED}" font-size="22" letter-spacing="5">LOCAL AGENT CONTROL PLANE</text>
+ <text x="190" y="1990" fill="{MUTED}" font-size="20">01  HUMAN INPUT</text>
+ <text x="190" y="2040" fill="{MUTED}" font-size="20">02  SYSTEM ROUTING</text>
+ <text x="190" y="2090" fill="{CYAN}" font-size="20">03  AGENT EXECUTION  ● READY</text>
 </g>
-<text x="345" y="134" font-family="DejaVu Serif,serif" font-size="92" letter-spacing="8" fill="#F5F5F5">HERMES</text>
-<text x="350" y="186" font-family="DejaVu Sans Mono,monospace" font-size="20" letter-spacing="6" fill="#EDFF45">NOUS RESEARCH // AGENT</text>
 </svg>'''
-(SOURCE/'unlock.svg').write_text(unlock)
-print('generated', *(str(p) for p in sorted(SOURCE.glob('*.svg'))))
+
+
+def wallpaper_three() -> str:
+    rows = [
+        ("01", "CONNECT", "MODEL PROVIDERS AND REMOTE NODES"),
+        ("02", "REMEMBER", "PERSISTENT CONTEXT AND USER MEMORY"),
+        ("03", "SCHEDULE", "AUTONOMOUS AND RECURRING OPERATIONS"),
+        ("04", "DELEGATE", "PARALLEL SPECIALIST AGENT WORKFLOWS"),
+    ]
+    markup = []
+    for i,(n,title,desc) in enumerate(rows):
+        y = 690 + i*300
+        markup.append(f'''<g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace">
+ <text x="300" y="{y}" fill="{CYAN}" font-size="25">[{n}]</text>
+ <text x="520" y="{y}" fill="{WHITE}" font-size="72" letter-spacing="12">{title}</text>
+ <text x="2060" y="{y}" fill="{MUTED}" font-size="21" letter-spacing="4">{desc}</text>
+ <path d="M300 {y+72}H3540" stroke="{BORDER}" stroke-width="2"/>
+</g>''')
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+{frame()}
+<text x="300" y="360" fill="{WHITE}" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="132" letter-spacing="28">CAPABILITIES</text>
+<text x="3510" y="360" text-anchor="end" fill="{CYAN}" font-family="IBM Plex Mono,monospace" font-size="24" letter-spacing="6">SYSTEM ONLINE ●</text>
+{''.join(markup)}
+</svg>'''
+
+
+wallpapers = [wallpaper_one(), wallpaper_two(), wallpaper_three()]
+for index, svg in enumerate(wallpapers, 1):
+    source = SOURCE / f"hermes-{index}.svg"
+    output = BACKGROUNDS / ("01-hermes-command.png" if index == 1 else f"hermes-{index}.png")
+    source.write_text(svg)
+    subprocess.run(["rsvg-convert", "-w", str(W), "-h", str(H), str(source), "-o", str(output)], check=True)
+
+unlock = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="288" viewBox="0 0 1024 288">
+<text x="512" y="112" fill="{WHITE}" text-anchor="middle" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="76" letter-spacing="28">HERMES</text>
+<text x="512" y="178" fill="{CYAN}" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="24" letter-spacing="10">/\\-_=+|&lt; -/= ~:*-/</text>
+<text x="512" y="238" fill="{MUTED}" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="15" letter-spacing="7">NODE LOCKED // AUTHENTICATE</text>
+</svg>'''
+(SOURCE / "unlock.svg").write_text(unlock)
+subprocess.run(["rsvg-convert", "-w", "1024", "-h", "288", str(SOURCE / "unlock.svg"), "-o", str(ROOT / "unlock.png")], check=True)
+print("generated", *(str(p) for p in sorted(BACKGROUNDS.glob("*.png"))))

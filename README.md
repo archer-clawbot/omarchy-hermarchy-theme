@@ -1,121 +1,160 @@
-# Hermes for Omarchy
+# Hermes // Nous for Omarchy
 
-![Hermes Omarchy theme preview](preview.png)
+![Hermes // Nous desktop](preview.png)
 
-An electric-blue Omarchy theme inspired by the visual language of
-[Hermes Agent](https://hermes-agent.nousresearch.com/) and
-[Nous Research](https://nousresearch.com/): electric Hermes blue, paper white,
-and the signature acid-yellow accent.
+A precision command environment for [Omarchy](https://omarchy.org/), inspired
+by [Hermes Agent](https://hermes-agent.nousresearch.com/) and
+[Nous Research](https://nousresearch.com/).
 
-The theme pairs editorial serif display moments with a precise terminal
-palette, technical framing, and a 1704 Hermes engraving treated in the
-Portal's monochrome print language. It remains quiet behind windows while
-making focus, selection, and agent status obvious.
+This is not a dark theme with a branded wallpaper. It treats Omarchy as the
+native operating environment for Hermes: human content is warm white, system
+structure is graphite, and cyan appears only when the agent or machine is
+active.
+
+```text
+HUMAN LAYER   warm white   documents, text, primary UI
+SYSTEM LAYER  graphite     borders, metadata, inactive state
+AGENT LAYER   cyan         execution, focus, agent status
+```
 
 ## Install
 
 ### Omarchy menu
 
-1. Open the Omarchy menu with `Super + Space`.
-2. Choose **Install > Style > Theme**.
-3. Paste:
+Open `Super + Space`, choose **Install > Style > Theme**, and paste:
 
-   ```text
-   https://github.com/archer-clawbot/omarchy-hermes-theme.git
-   ```
+```text
+https://github.com/archer-clawbot/omarchy-hermes-theme.git
+```
 
 ### Terminal
 
 ```sh
 omarchy theme install https://github.com/archer-clawbot/omarchy-hermes-theme.git
-```
-
-The legacy command remains supported by Omarchy releases that provide it:
-
-```sh
-omarchy-theme-install https://github.com/archer-clawbot/omarchy-hermes-theme.git
-```
-
-After installation, choose **Hermes** in the theme switcher or run:
-
-```sh
 omarchy theme set hermes
 ```
 
-Cycle the three included 4K backgrounds with:
+The repository remains `omarchy-hermes-theme` so Omarchy derives the stable
+theme slug `hermes`. Its display identity is **Hermes // Nous**.
+
+Cycle the three included backgrounds with:
 
 ```sh
 omarchy theme bg next
 ```
 
-## Palette
+## Visual system
 
-| Role | Color |
-|---|---|
-| Hermes primary | `#0000F2` |
-| Deep blue surface | `#00008E` |
-| Elevated blue | `#0000C0` |
-| Acid accent | `#EDFF45` |
-| Paper foreground | `#F5F5F5` |
-| Cyan | `#70E7FF` |
-| Success | `#89F7A1` |
-| Error | `#FF6B7A` |
+| Layer | Role | Color |
+|---|---|---|
+| Human | Primary text | `#F1F1EC` |
+| Human | Secondary text | `#9B9E9F` |
+| System | Background | `#08090A` |
+| System | Surface | `#101214` |
+| System | Raised surface | `#16191C` |
+| System | Border | `#272B2F` |
+| System | Muted metadata | `#606468` |
+| Agent | Hermes signal | `#61D6FF` |
+| Agent | Active signal | `#8DE4FF` |
+| State | Success | `#86D993` |
+| State | Warning | `#E2C275` |
+| State | Error | `#E46E6E` |
 
-The exact website blue dominates the wallpaper and shell chrome. Deeper blue
-surfaces preserve terminal legibility, while paper white and acid yellow carry
-the site's hard-edged editorial contrast.
+The governing rule is **95% monochrome, 5% signal color**. Cyan is semantic,
+not decorative.
 
 ## Included
 
-- Omarchy `colors.toml` and current `shell.toml` surfaces
-- Omarchy-generated terminal, editor, browser, and TUI palettes
-- Hyprlock, Walker, Waybar, Mako, Chromium, icons, and btop accents
-- One Portal-inspired 3840×2400 engraving wallpaper and two 3840×2160
-  geometric alternatives
-- A transparent Hermes unlock mark (`unlock.png`)
-- A 1920×1080 repository preview
-- A gallery-ready 1200×675 WebP (`gallery-preview.webp`)
-- Reproducible SVG sources and asset build script
+- Current Omarchy `colors.toml` semantic contract
+- Native Omarchy/Quickshell surfaces through `shell.toml`
+- Generated terminal, Neovim, GTK, editor, and TUI palettes
+- Walker, Waybar, Mako, Hyprlock, Chromium, icons, and btop accents
+- Three original 3840×2400 command-environment wallpapers
+- A transparent Hermes lock-screen mark
+- A real 1920×1080 Omarchy desktop preview
+- A gallery-ready 1200×675 WebP
+- Reproducible SVG/PNG artwork generator
+- Optional gateway-status module for Waybar users
+- Optional Hermes Fastfetch experience
+
+## Native Hermes integration
+
+Modern Omarchy exposes Hermes through its native Agents panel when the
+Omarchy–Hermes integration is installed. This theme styles that surface without
+patching package-managed files.
+
+The optional status integrations are intentionally opt-in:
+
+### Fastfetch
+
+```sh
+./extras/fastfetch/hermes-fastfetch.sh
+```
+
+It presents the node, local Hermes Gateway state, and a restrained system
+summary using the theme's semantic colors.
+
+### Waybar
+
+Current Omarchy uses Quickshell rather than Waybar. Older installations and
+Waybar users can add the JSON status module documented in:
+
+```text
+extras/waybar/README.md
+```
+
+It reports `HERMES ● ONLINE` only when the local gateway service is active.
+It never starts or modifies the service.
+
+## Design boundaries
+
+A theme repository can coordinate color, surfaces, wallpaper, lock screen,
+terminal, editor, browser, launcher, notifications, and TUI applications. It
+cannot safely replace Omarchy's package-owned Quickshell layout, rewrite the
+user's shell prompt, or add compositor behavior. Those changes are excluded by
+design rather than hidden in an installer.
+
+The active border is therefore a precise neutral hairline. Cyan focus appears
+inside controls and agent state surfaces; no global compositor files are
+mutated.
+
+See [DESIGN.md](DESIGN.md) for the complete visual and semantic rationale.
 
 ## Rebuild artwork
 
-The checked-in PNG and WebP files are ready to use. To reproduce them, install
-`librsvg` and ImageMagick, then run:
+The checked-in PNG/WebP files are ready to use. To rebuild the original
+wallpapers and lock asset, install `librsvg`, then run:
 
 ```sh
 python scripts/build_assets.py
-for source in assets/source/hermes-{2,3}.svg; do
-  name="$(basename "${source%.svg}")"
-  rsvg-convert -w 3840 -h 2160 "$source" -o "backgrounds/$name.png"
-done
-python scripts/build_portal_wallpaper.py
-rsvg-convert -w 1024 -h 288 assets/source/unlock.svg -o unlock.png
+```
+
+A gallery screenshot must be captured from a real themed desktop. It is not
+synthesized by the artwork script. Convert the approved screenshot with:
+
+```sh
 magick preview.png -strip -resize '1200>' -quality 80 gallery-preview.webp
 ```
 
-## Gallery submission asset
+## Gallery submission
 
-Omarchy's theme gallery expects a 16:9 screenshot converted with:
+For `omacom/omarchy-site`, add `gallery-preview.webp` as:
 
-```sh
-magick preview.png -strip -resize '1200>' -quality 80 hermes.webp
+```text
+assets/themes/hermes.webp
 ```
 
-`gallery-preview.webp` is already produced to that contract. In an
-`omacom-io/omarchy-site` pull request, add it as
-`assets/themes/hermes.webp` and add the alphabetized figure entry linking to
-this repository.
+Then add the alphabetized theme entry linking to this repository. The preview
+is a real Omarchy desktop capture, not a mockup.
 
-## Design and rights
+## Rights
 
-No imagery from the Nous Portal or Hermes websites is redistributed. The main
-wallpaper uses a licensed historical engraving from the Wellcome Collection,
-modified into a cobalt-and-paper duotone; complete source and attribution are
-in `NOTICE`. The remaining artwork is original. Hermes, Nous Research, and
-their marks belong to Nous Research. This is an unofficial community theme and
-is not an endorsement by or official release of Nous Research.
+All bundled artwork is original and generated from source under
+`assets/source/`. No imagery from the Hermes or Nous websites is redistributed.
+Hermes, Nous Research, and their marks belong to their respective owners. This
+is an unofficial community theme and does not imply sponsorship or endorsement.
+See `NOTICE`.
 
 ## License
 
-Theme code and original artwork are released under the MIT License. See
-`LICENSE`.
+Theme code and original artwork are released under the MIT License.

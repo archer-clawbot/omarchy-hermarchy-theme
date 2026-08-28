@@ -1,2 +1,4 @@
-@define-color foreground #F5F5F5;
-@define-color background #0000F2;
+@define-color foreground #F1F1EC;
+@define-color background #08090A;
+@define-color signal #61D6FF;
+@define-color border #272B2F;

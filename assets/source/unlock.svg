@@ -1,11 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="288" viewBox="0 0 1024 288">
-<g transform="translate(58 18)">
- <circle cx="126" cy="126" r="116" fill="#0000F2"/>
- <circle cx="126" cy="126" r="92" fill="none" stroke="#F5F5F5" stroke-width="4"/>
- <path d="M70 158 C110 130 94 84 126 58 C158 84 142 130 182 158 M126 54V200" fill="none" stroke="#F5F5F5" stroke-width="10" stroke-linecap="round"/>
- <path d="M104 78L66 48L82 98M148 78L186 48L170 98" fill="none" stroke="#EDFF45" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="126" cy="45" r="12" fill="#EDFF45"/>
-</g>
-<text x="345" y="134" font-family="DejaVu Serif,serif" font-size="92" letter-spacing="8" fill="#F5F5F5">HERMES</text>
-<text x="350" y="186" font-family="DejaVu Sans Mono,monospace" font-size="20" letter-spacing="6" fill="#EDFF45">NOUS RESEARCH // AGENT</text>
+<text x="512" y="112" fill="#F1F1EC" text-anchor="middle" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="76" letter-spacing="28">HERMES</text>
+<text x="512" y="178" fill="#61D6FF" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="24" letter-spacing="10">/\-_=+|&lt; -/= ~:*-/</text>
+<text x="512" y="238" fill="#606468" text-anchor="middle" font-family="IBM Plex Mono,DejaVu Sans Mono,monospace" font-size="15" letter-spacing="7">NODE LOCKED // AUTHENTICATE</text>
 </svg>
