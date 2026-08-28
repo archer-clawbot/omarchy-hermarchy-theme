@@ -81,17 +81,4 @@ unlock='''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="288" view
 <text x="350" y="186" font-family="DejaVu Sans Mono,monospace" font-size="20" letter-spacing="6" fill="#EDFF45">NOUS RESEARCH // AGENT</text>
 </svg>'''
 (SOURCE/'unlock.svg').write_text(unlock)
-
-preview='''<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
-<defs><linearGradient id="bar" x2="1"><stop stop-color="#0000F2"/><stop offset=".72" stop-color="#5B6CFF"/><stop offset="1" stop-color="#EDFF45"/></linearGradient></defs>
-<image href="assets/source/hermes-1.svg" width="1920" height="1080" preserveAspectRatio="xMidYMid slice"/>
-<rect x="22" y="20" width="1876" height="38" rx="10" fill="#0E0E23" fill-opacity=".96" stroke="#5B6CFF" stroke-opacity=".55"/>
-<g font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#F5F5F5"><text x="48" y="46">◈  HERMES</text><text x="1540" y="46">NET  ▴  82%   09:41</text><text x="916" y="46" fill="#EDFF45">1  2  3  4</text></g>
-<rect x="82" y="144" width="1060" height="760" rx="18" fill="#09091A" fill-opacity=".94" stroke="url(#bar)" stroke-width="3"/>
-<rect x="82" y="144" width="1060" height="46" rx="18" fill="#15152E"/><circle cx="116" cy="167" r="6" fill="#FF5C6C"/><circle cx="138" cy="167" r="6" fill="#EDFF45"/><circle cx="160" cy="167" r="6" fill="#7CF29A"/>
-<g font-family="DejaVu Sans Mono,monospace" font-size="20"><text x="120" y="245" fill="#8C8CA7">cody@omarchy  ~/projects</text><text x="120" y="292" fill="#EDFF45">❯</text><text x="154" y="292" fill="#F5F5F5">hermes</text><text x="120" y="360" fill="#5DE4FF">HERMES AGENT</text><text x="120" y="401" fill="#8C8CA7">The agent that grows with you.</text><text x="120" y="478" fill="#5B6CFF">●</text><text x="154" y="478" fill="#F5F5F5">provider</text><text x="338" y="478" fill="#7CF29A">nous</text><text x="120" y="520" fill="#5B6CFF">●</text><text x="154" y="520" fill="#F5F5F5">model</text><text x="338" y="520" fill="#7CF29A">hermes-4</text><text x="120" y="602" fill="#EDFF45">›</text><text x="154" y="602" fill="#F5F5F5">How can I help?</text><rect x="120" y="642" width="900" height="96" rx="8" fill="#15152E" stroke="#33335A"/><text x="144" y="699" fill="#8C8CA7">Build something remarkable…</text></g>
-<rect x="1255" y="248" width="525" height="430" rx="18" fill="#0E0E23" fill-opacity=".96" stroke="#5B6CFF" stroke-width="2"/>
-<text x="1300" y="306" font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#EDFF45" letter-spacing="3">// SYSTEM</text><text x="1300" y="372" font-family="DejaVu Serif,serif" font-size="42" fill="#F5F5F5">Everything to</text><text x="1300" y="422" font-family="DejaVu Serif,serif" font-size="42" fill="#F5F5F5">Power Hermes</text><g font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#8C8CA7"><text x="1300" y="492">MEMORY       ONLINE</text><text x="1300" y="532">GATEWAY      ACTIVE</text><text x="1300" y="572">SUBAGENTS    READY</text></g><rect x="1300" y="612" width="220" height="4" fill="#EDFF45"/>
-</svg>'''
-(ROOT/'preview.svg').write_text(preview)
-print('generated', *(str(p) for p in sorted(SOURCE.glob('*.svg'))), ROOT/'preview.svg')
+print('generated', *(str(p) for p in sorted(SOURCE.glob('*.svg'))))

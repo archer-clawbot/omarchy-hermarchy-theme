@@ -11,3 +11,23 @@ Visual inspiration references:
 - https://portal.nousresearch.com/
 
 No images or other binary assets from those websites are redistributed here.
+
+Third-party artwork
+-------------------
+
+"Mercury (Hermes). Engraving by G.H. Frezza, 1704, after P. de Petris
+after F. Albani."
+
+Source: Wellcome Collection via Wikimedia Commons
+https://commons.wikimedia.org/wiki/File:Mercury_(Hermes)._Engraving_by_G.H._Frezza,_1704,_after_P._d_Wellcome_V0035976.jpg
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Credit: Wellcome Library, London / Wellcome Collection.
+
+Changes made for this theme: cropped, converted to a high-contrast alpha mask,
+recolored in cobalt and paper white, layered with technical framing and radial
+line artwork, and composed into a 16:10 desktop wallpaper. The source scan is
+stored at assets/source/mercury-hermes-frezza-1704.jpg. The resulting wallpaper
+is backgrounds/01-hermes-portal.png.

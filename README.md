@@ -8,8 +8,9 @@ An electric-blue Omarchy theme inspired by the visual language of
 paper white, and the signature acid-yellow accent.
 
 The theme pairs editorial serif display moments with a precise terminal
-palette and original network/radiant-line artwork. It is designed to remain
-quiet behind windows while making focus, selection, and agent status obvious.
+palette, technical framing, and a 1704 Hermes engraving treated in the
+Portal's monochrome print language. It remains quiet behind windows while
+making focus, selection, and agent status obvious.
 
 ## Install
 
@@ -70,7 +71,8 @@ background.
 - Omarchy `colors.toml` and current `shell.toml` surfaces
 - Omarchy-generated terminal, editor, browser, and TUI palettes
 - Hyprlock, Walker, Waybar, Mako, Chromium, icons, and btop accents
-- Three original 3840×2160 wallpapers
+- One Portal-inspired 3840×2400 engraving wallpaper and two 3840×2160
+  geometric alternatives
 - A transparent Hermes unlock mark (`unlock.png`)
 - A 1920×1080 repository preview
 - A gallery-ready 1200×675 WebP (`gallery-preview.webp`)
@@ -83,11 +85,11 @@ The checked-in PNG and WebP files are ready to use. To reproduce them, install
 
 ```sh
 python scripts/build_assets.py
-for source in assets/source/hermes-*.svg; do
+for source in assets/source/hermes-{2,3}.svg; do
   name="$(basename "${source%.svg}")"
   rsvg-convert -w 3840 -h 2160 "$source" -o "backgrounds/$name.png"
 done
-rsvg-convert -w 1920 -h 1080 preview.svg -o preview.png
+python scripts/build_portal_wallpaper.py
 rsvg-convert -w 1024 -h 288 assets/source/unlock.svg -o unlock.png
 magick preview.png -strip -resize '1200>' -quality 80 gallery-preview.webp
 ```
@@ -107,11 +109,12 @@ this repository.
 
 ## Design and rights
 
-All wallpaper and preview artwork in this repository is original and generated
-from the SVG sources under `assets/source/`; no website imagery is bundled.
-Hermes, Nous Research, and their marks belong to Nous Research. This is an
-unofficial community theme and is not an endorsement by or official release
-of Nous Research. See `NOTICE`.
+No imagery from the Nous Portal or Hermes websites is redistributed. The main
+wallpaper uses a licensed historical engraving from the Wellcome Collection,
+modified into a cobalt-and-paper duotone; complete source and attribution are
+in `NOTICE`. The remaining artwork is original. Hermes, Nous Research, and
+their marks belong to Nous Research. This is an unofficial community theme and
+is not an endorsement by or official release of Nous Research.
 
 ## License
 
