@@ -4,8 +4,8 @@
 
 An electric-blue Omarchy theme inspired by the visual language of
 [Hermes Agent](https://hermes-agent.nousresearch.com/) and
-[Nous Research](https://nousresearch.com/): deep portal navy, Hermes blue,
-paper white, and the signature acid-yellow accent.
+[Nous Research](https://nousresearch.com/): electric Hermes blue, paper white,
+and the signature acid-yellow accent.
 
 The theme pairs editorial serif display moments with a precise terminal
 palette, technical framing, and a 1704 Hermes engraving treated in the
@@ -52,19 +52,18 @@ omarchy theme bg next
 
 | Role | Color |
 |---|---|
-| Portal background | `#09091A` |
-| Elevated surface | `#15152E` |
-| Hermes blue | `#0000F2` |
-| Readable blue | `#5B6CFF` |
+| Hermes primary | `#0000F2` |
+| Deep blue surface | `#00008E` |
+| Elevated blue | `#0000C0` |
 | Acid accent | `#EDFF45` |
 | Paper foreground | `#F5F5F5` |
-| Cyan | `#5DE4FF` |
-| Success | `#7CF29A` |
-| Error | `#FF5C6C` |
+| Cyan | `#70E7FF` |
+| Success | `#89F7A1` |
+| Error | `#FF6B7A` |
 
-The exact brand blue is retained for identity and gradients. The lighter blue
-is used when text or thin UI chrome needs more contrast against the dark
-background.
+The exact website blue dominates the wallpaper and shell chrome. Deeper blue
+surfaces preserve terminal legibility, while paper white and acid yellow carry
+the site's hard-edged editorial contrast.
 
 ## Included
 

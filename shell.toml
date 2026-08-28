@@ -1,7 +1,7 @@
 # Omarchy shell overrides for the Hermes visual system.
 [bar]
-background = "#09091A"
-background-alpha = 0.96
+background = "#0000F2"
+background-alpha = 1.0
 text = "#F5F5F5"
 active = "#EDFF45"
 scale-with-font = true
@@ -9,13 +9,13 @@ size-horizontal = 28
 size-vertical = 30
 
 [hyprland]
-active-border = "#0000F2 #5B6CFF #EDFF45 45deg"
-active-border-foreground = "#5B6CFF #EDFF45 45deg"
+active-border = "#EDFF45 #F5F5F5 45deg"
+active-border-foreground = "#EDFF45 #F5F5F5 45deg"
 
 [controls]
 normal-color = "#D9D9E5"
 normal-fill-alpha = 0.04
-normal-border = "#33335A"
+normal-border = "#5B6CFF"
 normal-border-alpha = 1.0
 hover-cursor-color = "#F5F5F5"
 hover-cursor-fill-alpha = 0.10
@@ -24,7 +24,7 @@ focus-color = "#FFFFFF"
 focus-fill-alpha = 0.12
 focus-border = "hyprland.active-border"
 focus-border-width = 2
-selected-color = "#09091A"
+selected-color = "#00008E"
 selected-fill-alpha = 1.0
 selected-border = "#EDFF45"
 selected-border-width = 1
@@ -35,21 +35,21 @@ selection-fill-alpha = 0.35
 base-size = 12
 
 [popups]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.98
 text = "#F5F5F5"
 border = "hyprland.active-border"
 border-alpha = 1.0
 
 [tooltip]
-background = "#15152E"
+background = "#0000C0"
 background-alpha = 0.98
 text = "#F5F5F5"
 border = "#5B6CFF"
 border-alpha = 1.0
 
 [notifications]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.98
 text = "#F5F5F5"
 border = "hyprland.active-border"
@@ -57,52 +57,52 @@ border-alpha = 1.0
 countdown = "#EDFF45"
 
 [launcher]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.98
 text = "#F5F5F5"
 border = "hyprland.active-border-foreground"
 border-alpha = 1.0
-scrim = "#050510"
+scrim = "#00003D"
 scrim-alpha = 0.68
 selected-background = "#EDFF45"
 selected-background-alpha = 1.0
-selected-text = "#09091A"
+selected-text = "#00008E"
 selected-border = "#EDFF45"
 selected-border-alpha = 1.0
 selected-border-width = 1
 
 [menu]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.99
 text = "#F5F5F5"
 border = "hyprland.active-border-foreground"
 border-alpha = 1.0
-scrim = "#050510"
+scrim = "#00003D"
 scrim-alpha = 0.68
 selected-background = "#EDFF45"
 selected-background-alpha = 1.0
-selected-text = "#09091A"
+selected-text = "#00008E"
 selected-border = "#EDFF45"
 selected-border-alpha = 1.0
 selected-border-width = 1
 
 [polkit]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.99
 text = "#F5F5F5"
 text-error = "#FF5C6C"
 border = "hyprland.active-border"
 border-error = "#FF5C6C"
 border-alpha = 1.0
-scrim = "#050510"
+scrim = "#00003D"
 scrim-alpha = 0.72
 accent = "#EDFF45"
 
 [lock]
-background = "#0E0E23"
+background = "#00008E"
 background-alpha = 0.94
 text = "#F5F5F5"
-placeholder = "#8C8CA7"
+placeholder = "#A7A7C8"
 text-error = "#FF5C6C"
 border = "#5B6CFF"
 border-active = "hyprland.active-border"
@@ -112,7 +112,7 @@ selection = "#EDFF45"
 selection-alpha = 0.45
 
 [image-picker]
-scrim = "#050510"
+scrim = "#00003D"
 scrim-alpha = 0.72
 text = "#F5F5F5"
 selected-border = "#EDFF45"

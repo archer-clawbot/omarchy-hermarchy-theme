@@ -26,7 +26,7 @@ def nodes(cx, cy):
     links=[(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(9,0),(0,10),(10,11),(11,4),(10,13),(13,12),(12,11),(13,8),(12,6)]
     lines=''.join(f'<line x1="{cx+pts[a][0]}" y1="{cy+pts[a][1]}" x2="{cx+pts[b][0]}" y2="{cy+pts[b][1]}"/>' for a,b in links)
     circles=''.join(f'<circle cx="{cx+x}" cy="{cy+y}" r="{9 if i<10 else 13}"/>' for i,(x,y) in enumerate(pts))
-    return f'<g stroke="#5B6CFF" stroke-width="3" fill="#09091A">{lines}{circles}</g>'
+    return f'<g stroke="#EDFF45" stroke-width="3" fill="#0000F2">{lines}{circles}</g>'
 
 def wallpaper(variant):
     if variant==1:
@@ -40,7 +40,7 @@ def wallpaper(variant):
         cx,cy=1200,1080
     align = 'start' if variant==1 else ('middle' if variant==2 else 'end')
     tx = 300 if variant==1 else (1920 if variant==2 else 3540)
-    graphic = f'''{rays(cx,cy,820,96,"#5B6CFF",0.28,0.01)}
+    graphic = f'''{rays(cx,cy,820,96,"#EDFF45",0.28,0.01)}
     {rays(cx,cy,660,48,"#EDFF45",0.14,0.04)}
     {nodes(cx,cy)}
     <circle cx="{cx}" cy="{cy}" r="220" fill="none" stroke="#F5F5F5" stroke-width="5"/>
@@ -50,14 +50,14 @@ def wallpaper(variant):
     <circle cx="{cx}" cy="{cy-145}" r="16" fill="#EDFF45"/>'''
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
 <defs>
- <radialGradient id="glow"><stop stop-color="#0000F2" stop-opacity=".26"/><stop offset="1" stop-color="#09091A" stop-opacity="0"/></radialGradient>
+ <radialGradient id="glow"><stop stop-color="#0000F2" stop-opacity=".26"/><stop offset="1" stop-color="#0000F2" stop-opacity="0"/></radialGradient>
  <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#F5F5F5" stroke-opacity=".026" stroke-width="1"/></pattern>
  <filter id="soft"><feGaussianBlur stdDeviation="28"/></filter>
 </defs>
-<rect width="100%" height="100%" fill="#09091A"/>
+<rect width="100%" height="100%" fill="#0000F2"/>
 <rect width="100%" height="100%" fill="url(#grid)"/>
 <circle cx="{cx}" cy="{cy}" r="1150" fill="url(#glow)" filter="url(#soft)"/>
-<path d="M0 175 H3840 M0 1985 H3840" stroke="#5B6CFF" stroke-opacity=".28" stroke-width="2"/>
+<path d="M0 175 H3840 M0 1985 H3840" stroke="#EDFF45" stroke-opacity=".28" stroke-width="2"/>
 {graphic}
 <g fill="#F5F5F5" text-anchor="{align}">
  <text x="{tx}" y="{1930 if variant==2 else 360}" font-family="DejaVu Serif,serif" font-size="{148 if variant==2 else 132}" letter-spacing="7">{title}</text>

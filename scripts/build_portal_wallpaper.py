@@ -58,45 +58,45 @@ with tempfile.TemporaryDirectory() as td:
         "-composite", str(figure),
     )
     run(
-        "magick", "-size", "1820x2380", "xc:#5B6CFF",
+        "magick", "-size", "1820x2380", "xc:#EDFF45",
         str(figure_mask), "-alpha", "off", "-compose", "CopyOpacity",
-        "-composite", "-channel", "A", "-evaluate", "multiply", "0.36",
+        "-composite", "-channel", "A", "-evaluate", "multiply", "0.48",
         "+channel", str(figure_blue),
     )
 
     ray_markup = rays(3030, 870, 430, 1170, 104)
     base_svg.write_text(f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
 <defs>
-  <linearGradient id="stage" x1="0" x2="1"><stop stop-color="#09091A"/><stop offset="1" stop-color="#11112B"/></linearGradient>
-  <radialGradient id="blueglow"><stop stop-color="#0000F2" stop-opacity=".28"/><stop offset="1" stop-color="#0000F2" stop-opacity="0"/></radialGradient>
+  <linearGradient id="stage" x1="0" x2="1"><stop stop-color="#0000F2"/><stop offset="1" stop-color="#0000C0"/></linearGradient>
+  <radialGradient id="blueglow"><stop stop-color="#EDFF45" stop-opacity=".12"/><stop offset="1" stop-color="#EDFF45" stop-opacity="0"/></radialGradient>
   <pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#F5F5F5" opacity=".08"/></pattern>
-  <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M80 0H0V80" fill="none" stroke="#F5F5F5" stroke-opacity=".025"/></pattern>
+  <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M80 0H0V80" fill="none" stroke="#F5F5F5" stroke-opacity=".06"/></pattern>
 </defs>
-<rect width="3840" height="2400" fill="#070716"/>
+<rect width="3840" height="2400" fill="#0000F2"/>
 <rect x="0" y="0" width="2260" height="2400" fill="url(#stage)"/>
-<rect x="2260" y="0" width="1580" height="2400" fill="#0B0B20"/>
+<rect x="2260" y="0" width="1580" height="2400" fill="#0000D8"/>
 <rect width="3840" height="2400" fill="url(#grid)"/>
-<rect x="2400" y="80" width="1360" height="2240" fill="none" stroke="#34345A" stroke-width="3"/>
+<rect x="2400" y="80" width="1360" height="2240" fill="none" stroke="#F5F5F5" stroke-opacity=".48" stroke-width="3"/>
 <circle cx="3030" cy="870" r="1220" fill="url(#blueglow)"/>
-<g stroke="#5B6CFF" stroke-width="2.4" opacity=".34">{ray_markup}</g>
+<g stroke="#EDFF45" stroke-width="2.4" opacity=".24">{ray_markup}</g>
 <g opacity=".9">
-  <path d="M0 150H2130M0 2250H2130" stroke="#34345A" stroke-width="2"/>
-  <path d="M2130 0V2400M2260 0V2400" stroke="#0000F2" stroke-width="3"/>
+  <path d="M0 150H2130M0 2250H2130" stroke="#F5F5F5" stroke-opacity=".34" stroke-width="2"/>
+  <path d="M2130 0V2400M2260 0V2400" stroke="#EDFF45" stroke-width="3"/>
 </g>
 <rect x="120" y="118" width="1180" height="52" fill="url(#dots)" opacity=".75"/>
 <g font-family="DejaVu Sans Mono,monospace" letter-spacing="6">
   <text x="120" y="108" fill="#EDFF45" font-size="24">// NOUS RESEARCH</text>
-  <text x="1880" y="108" fill="#8C8CA7" font-size="20" text-anchor="end">AGENT SYSTEM 01</text>
-  <text x="120" y="1980" fill="#8C8CA7" font-size="22">CONNECT · REMEMBER · SCHEDULE · DELEGATE</text>
-  <text x="3670" y="2280" fill="#8C8CA7" font-size="18" text-anchor="end">MERCVRIVS // 1704</text>
+  <text x="1880" y="108" fill="#F5F5F5" font-size="20" text-anchor="end">AGENT SYSTEM 01</text>
+  <text x="120" y="1980" fill="#F5F5F5" font-size="22">CONNECT · REMEMBER · SCHEDULE · DELEGATE</text>
+  <text x="3670" y="2280" fill="#F5F5F5" font-size="18" text-anchor="end">MERCVRIVS // 1704</text>
 </g>
 <g fill="#F5F5F5" font-family="DejaVu Serif,serif">
   <text x="120" y="1630" font-size="220" letter-spacing="12">HERMES</text>
   <text x="120" y="1840" font-size="220" letter-spacing="12">AGENT</text>
 </g>
-<rect x="120" y="1910" width="620" height="12" fill="#0000F2"/>
+<rect x="120" y="1910" width="620" height="12" fill="#F5F5F5"/>
 <rect x="740" y="1910" width="160" height="12" fill="#EDFF45"/>
-<g font-family="DejaVu Sans Mono,monospace" font-size="18" fill="#5B6CFF" opacity=".8">
+<g font-family="DejaVu Sans Mono,monospace" font-size="18" fill="#EDFF45" opacity=".9">
   <text x="2390" y="150">#01</text><text x="3660" y="150" text-anchor="end">PORTAL_</text>
 </g>
 </svg>''')
