@@ -1,0 +1,4 @@
+# Generated and local files
+__pycache__/
+*.pyc
+.DS_Store
