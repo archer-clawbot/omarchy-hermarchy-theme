@@ -62,12 +62,12 @@ def wallpaper_one() -> str:
  <text x="1920" y="1250" fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">NOUS RESEARCH</text>
 </g>
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="21" letter-spacing="4">
- <text x="170" y="2010" fill="{CYAN}">HERMES::NODE</text>
- <text x="170" y="2060" fill="{MUTED}">STATE</text><text x="380" y="2060" fill="{WHITE}">READY</text>
- <text x="170" y="2110" fill="{MUTED}">HOST</text><text x="380" y="2110" fill="{WHITE}">OMARCHY</text>
- <text x="170" y="2160" fill="{MUTED}">MODE</text><text x="380" y="2160" fill="{WHITE}">LOCAL</text>
- <text x="3670" y="2100" fill="{WHITE}" text-anchor="end">NOUS RESEARCH</text>
- <text x="3670" y="2150" fill="{MUTED}" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
+ <text x="170" y="1850" fill="{CYAN}">HERMES::NODE</text>
+ <text x="170" y="1900" fill="{MUTED}">STATE</text><text x="380" y="1900" fill="{WHITE}">READY</text>
+ <text x="170" y="1950" fill="{MUTED}">HOST</text><text x="380" y="1950" fill="{WHITE}">OMARCHY</text>
+ <text x="170" y="2000" fill="{MUTED}">MODE</text><text x="380" y="2000" fill="{WHITE}">LOCAL</text>
+ <text x="3670" y="1940" fill="{WHITE}" text-anchor="end">NOUS RESEARCH</text>
+ <text x="3670" y="1990" fill="{MUTED}" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
 </g>
 </svg>'''
 

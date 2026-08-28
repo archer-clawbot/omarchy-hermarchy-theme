@@ -23,11 +23,11 @@
  <text x="1920" y="1250" fill="#606468" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">NOUS RESEARCH</text>
 </g>
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="21" letter-spacing="4">
- <text x="170" y="2010" fill="#61D6FF">HERMES::NODE</text>
- <text x="170" y="2060" fill="#606468">STATE</text><text x="380" y="2060" fill="#F1F1EC">READY</text>
- <text x="170" y="2110" fill="#606468">HOST</text><text x="380" y="2110" fill="#F1F1EC">OMARCHY</text>
- <text x="170" y="2160" fill="#606468">MODE</text><text x="380" y="2160" fill="#F1F1EC">LOCAL</text>
- <text x="3670" y="2100" fill="#F1F1EC" text-anchor="end">NOUS RESEARCH</text>
- <text x="3670" y="2150" fill="#606468" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
+ <text x="170" y="1850" fill="#61D6FF">HERMES::NODE</text>
+ <text x="170" y="1900" fill="#606468">STATE</text><text x="380" y="1900" fill="#F1F1EC">READY</text>
+ <text x="170" y="1950" fill="#606468">HOST</text><text x="380" y="1950" fill="#F1F1EC">OMARCHY</text>
+ <text x="170" y="2000" fill="#606468">MODE</text><text x="380" y="2000" fill="#F1F1EC">LOCAL</text>
+ <text x="3670" y="1940" fill="#F1F1EC" text-anchor="end">NOUS RESEARCH</text>
+ <text x="3670" y="1990" fill="#606468" text-anchor="end">INTELLIGENCE, MADE USEFUL.</text>
 </g>
 </svg>

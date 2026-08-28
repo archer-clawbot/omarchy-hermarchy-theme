@@ -18,7 +18,7 @@ printf '%sGATEWAY   %b\n' "$muted" "$gateway"
 printf '%sNODE      %sOMARCHY-01%s\n\n' "$muted" "$white" "$reset"
 printf '%s────────────────────────────────────────%s\n\n' "$muted" "$reset"
 
-exec fastfetch \
+fastfetch \
   --logo none \
   --color-keys 6 \
   --color-title 7 \
