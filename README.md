@@ -79,6 +79,15 @@ theme styles that surface without patching package-managed files.
 
 The optional status integrations are intentionally opt-in:
 
+### Agent state contract
+
+`extras/agent-integration/` contains the first Tier 2 component: a versioned,
+provider-neutral JSON state contract, a strict validator, and a read-only local
+Hermes adapter. It distinguishes idle, executing, waiting for human input,
+completed, failed, unavailable, and unknown without patching Omarchy or running
+a background service. See
+[`extras/agent-integration/README.md`](extras/agent-integration/README.md).
+
 ### Fastfetch
 
 ```sh

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/archer-clawbot/omarchy-hermarchy-theme/blob/main/extras/agent-integration/agent-state.schema.json",
+  "title": "Hermarchy Agent State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "observedAt", "state", "signal", "node", "gateway", "agent", "activity", "runtime", "source"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "observedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "state": {"enum": ["idle", "executing", "waiting", "completed", "failed", "unavailable", "unknown"]},
+    "signal": {"enum": ["muted", "cyan", "amber", "green", "red"]},
+    "node": {"type": "string", "minLength": 1},
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["active", "inactive", "activating", "deactivating", "failed", "unknown"]}
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "available"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "available": {"type": "boolean"}
+      }
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "task", "detail", "lastActivityAt", "lastActivity", "endReason", "activeWorkers"],
+      "properties": {
+        "sessionId": {"type": ["string", "null"]},
+        "task": {"type": ["string", "null"]},
+        "detail": {"type": ["string", "null"]},
+        "lastActivityAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "lastActivity": {"type": ["string", "null"]},
+        "endReason": {"type": ["string", "null"]},
+        "activeWorkers": {"type": "integer", "minimum": 0}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "provider"],
+      "properties": {
+        "model": {"type": ["string", "null"]},
+        "provider": {"type": ["string", "null"]}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "confidence"],
+      "properties": {
+        "adapter": {"type": "string", "minLength": 1},
+        "confidence": {"enum": ["observed", "inferred", "explicit", "unknown"]}
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"state": {"const": "executing"}}}, "then": {"properties": {"signal": {"const": "cyan"}}}},
+    {"if": {"properties": {"state": {"const": "waiting"}}}, "then": {"properties": {"signal": {"const": "amber"}}}},
+    {
+      "if": {"properties": {"state": {"const": "completed"}}},
+      "then": {
+        "properties": {
+          "signal": {"const": "green"},
+          "activity": {
+            "properties": {
+              "endReason": {"enum": ["complete", "completed", "finished", "success", "succeeded", "task_completed"]}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"state": {"const": "failed"}}},
+      "then": {
+        "properties": {
+          "signal": {"const": "red"},
+          "activity": {
+            "properties": {
+              "endReason": {"enum": ["error", "exception", "failed", "failure", "task_failed", "tool_error"]}
+            }
+          }
+        }
+      }
+    },
+    {"if": {"properties": {"state": {"enum": ["idle", "unavailable", "unknown"]}}}, "then": {"properties": {"signal": {"const": "muted"}}}}
+  ]
+}

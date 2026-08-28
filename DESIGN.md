@@ -98,3 +98,17 @@ A public Omarchy theme must remain safe and portable. It does not:
 Optional status scripts are inspectable, user-owned, and read-only. This keeps
 the gallery theme installable while leaving room for deeper agent integration
 on systems that explicitly opt in.
+
+## Agent-state invariant
+
+Optional integrations use a versioned provider-neutral contract. Every signal
+color must correspond to observable state:
+
+- graphite: idle, unavailable, or unknown;
+- cyan: fresh execution or active delegated work;
+- amber: an explicit, fresh human-input request;
+- green: a recent explicit success reason;
+- red: an explicit recent failure.
+
+Waiting is never inferred from an old open session. Runtime snapshots expire so
+a crashed producer cannot leave the environment permanently illuminated.

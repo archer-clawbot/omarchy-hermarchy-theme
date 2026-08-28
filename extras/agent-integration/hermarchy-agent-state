@@ -1,0 +1,582 @@
+#!/usr/bin/env python3
+"""Emit Hermarchy's provider-neutral local agent-state contract."""
+
+import argparse
+import json
+import math
+import os
+import re
+import select
+import shutil
+import socket
+import sqlite3
+import stat
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+STATE_SIGNALS = {
+    "idle": "muted",
+    "executing": "cyan",
+    "waiting": "amber",
+    "completed": "green",
+    "failed": "red",
+    "unavailable": "muted",
+    "unknown": "muted",
+}
+GATEWAY_STATES = {"active", "inactive", "activating", "deactivating", "failed", "unknown"}
+SUCCESS_END_REASONS = {"complete", "completed", "finished", "success", "succeeded", "task_completed"}
+FAILURE_END_REASONS = {"error", "exception", "failed", "failure", "task_failed", "tool_error"}
+DELEGATION_STATES = {"pending", "queued", "running", "completed", "failed", "cancelled", "error", "interrupted"}
+TERMINAL_DELEGATION_STATES = {"completed", "failed", "cancelled", "error", "interrupted"}
+ACTIVE_DELEGATION_STATES = DELEGATION_STATES - TERMINAL_DELEGATION_STATES
+MAX_GATEWAY_OUTPUT_BYTES = 64
+MAX_RUNTIME_FILE_BYTES = 16 * 1024
+MAX_VALIDATION_INPUT_BYTES = 64 * 1024
+MAX_TASK_LENGTH = 512
+MAX_DETAIL_LENGTH = 2048
+MAX_ID_LENGTH = 256
+RFC3339_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
+
+
+def iso_time(epoch):
+    return datetime.fromtimestamp(epoch, timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def is_date_time(value):
+    if not isinstance(value, str) or RFC3339_PATTERN.fullmatch(value) is None:
+        return False
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed.tzinfo is not None
+    except ValueError:
+        return False
+
+
+def is_finite_epoch(value):
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and math.isfinite(value)
+    )
+
+
+def is_representable_epoch(value):
+    if not is_finite_epoch(value):
+        return False
+    try:
+        datetime.fromtimestamp(value, timezone.utc)
+        return True
+    except (OverflowError, OSError, ValueError):
+        return False
+
+
+def finite_timestamp_argument(value):
+    try:
+        parsed = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be a finite timestamp") from error
+    if not is_representable_epoch(parsed):
+        raise argparse.ArgumentTypeError("must be a finite timestamp")
+    return parsed
+
+
+def valid_text(value, maximum, nullable=True):
+    if value is None:
+        return nullable
+    return isinstance(value, str) and len(value) <= maximum
+
+
+def valid_session(session, now):
+    if not session:
+        return True
+    numeric_types = ("integer", "real")
+    if session["started_at_type"] not in numeric_types:
+        return False
+    if session["ended_at_type"] not in (*numeric_types, "null"):
+        return False
+    if session["last_activity_at_type"] not in (*numeric_types, "null"):
+        return False
+    timestamps = (session["started_at"], session["last_activity_at"])
+    if session["ended_at"] is not None:
+        timestamps += (session["ended_at"],)
+    if any(not is_representable_epoch(value) or value > now for value in timestamps):
+        return False
+    if session["started_at"] > session["last_activity_at"]:
+        return False
+    if (
+        session["ended_at"] is not None
+        and session["last_activity_at"] > session["ended_at"]
+    ):
+        return False
+    if session["id_type"] != "text":
+        return False
+    nullable_text_types = (
+        "title_type",
+        "model_type",
+        "billing_provider_type",
+        "end_reason_type",
+        "last_activity_description_type",
+    )
+    if any(session[key] not in ("text", "null") for key in nullable_text_types):
+        return False
+    return (
+        valid_text(session["id"], MAX_ID_LENGTH, nullable=False)
+        and valid_text(session["title"], MAX_TASK_LENGTH)
+        and valid_text(session["model"], MAX_ID_LENGTH)
+        and valid_text(session["billing_provider"], MAX_ID_LENGTH)
+        and valid_text(session["end_reason"], MAX_ID_LENGTH)
+        and valid_text(session["last_activity_description"], MAX_DETAIL_LENGTH)
+    )
+
+
+def read_bounded_regular_file(path, maximum):
+    descriptor = None
+    try:
+        flags = os.O_RDONLY | os.O_NONBLOCK
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(path, flags)
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("input must be a regular file")
+        payload = os.read(descriptor, maximum + 1)
+        if len(payload) > maximum:
+            raise ValueError(f"input exceeds {maximum} bytes")
+        return payload
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def read_runtime_candidate(path):
+    try:
+        return json.loads(read_bounded_regular_file(path, MAX_RUNTIME_FILE_BYTES))
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+        RecursionError,
+    ):
+        return None
+
+
+def latest_session(connection):
+    connection.row_factory = sqlite3.Row
+    row = connection.execute(
+        """
+        SELECT substr(id, 1, ?) AS id,
+               typeof(id) AS id_type,
+               substr(title, 1, ?) AS title,
+               typeof(title) AS title_type,
+               substr(model, 1, ?) AS model,
+               typeof(model) AS model_type,
+               substr(billing_provider, 1, ?) AS billing_provider,
+               typeof(billing_provider) AS billing_provider_type,
+               CASE WHEN typeof(started_at) IN ('integer', 'real')
+                    THEN started_at ELSE NULL END AS started_at,
+               typeof(started_at) AS started_at_type,
+               CASE WHEN typeof(ended_at) IN ('integer', 'real')
+                    THEN ended_at ELSE NULL END AS ended_at,
+               typeof(ended_at) AS ended_at_type,
+               substr(end_reason, 1, ?) AS end_reason,
+               typeof(end_reason) AS end_reason_type,
+               CASE WHEN typeof(last_activity_at) IN ('integer', 'real')
+                    THEN last_activity_at
+                    WHEN typeof(last_activity_at) = 'null'
+                     AND typeof(started_at) IN ('integer', 'real')
+                    THEN started_at ELSE NULL END AS last_activity_at,
+               typeof(last_activity_at) AS last_activity_at_type,
+               CASE WHEN typeof(last_activity_description) = 'text'
+                    THEN substr(last_activity_description, 1, ?)
+                    WHEN typeof(last_activity_description) = 'null'
+                    THEN NULL ELSE NULL END AS last_activity_description,
+               typeof(last_activity_description)
+                   AS last_activity_description_type
+          FROM sessions
+         WHERE hidden = 0
+         ORDER BY COALESCE(last_activity_at, started_at) DESC
+         LIMIT 1
+        """,
+        (
+            MAX_ID_LENGTH + 1,
+            MAX_TASK_LENGTH + 1,
+            MAX_ID_LENGTH + 1,
+            MAX_ID_LENGTH + 1,
+            MAX_ID_LENGTH + 1,
+            MAX_DETAIL_LENGTH + 1,
+        ),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def active_worker_count(connection):
+    recognized = tuple(sorted(DELEGATION_STATES))
+    invalid = connection.execute(
+        """SELECT 1 FROM async_delegations
+            WHERE typeof(state) != 'text'
+               OR state NOT IN (?,?,?,?,?,?,?,?)
+            LIMIT 1""",
+        recognized,
+    ).fetchone()
+    if invalid is not None:
+        raise ValueError("unrecognized delegation state")
+    active = tuple(sorted(ACTIVE_DELEGATION_STATES))
+    return connection.execute(
+        "SELECT count(*) FROM async_delegations WHERE state IN (?,?,?)",
+        active,
+    ).fetchone()[0]
+
+
+def open_read_only_database(path):
+    return sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+
+
+def gateway_state(requested):
+    if requested != "auto":
+        return requested if requested in GATEWAY_STATES else "unknown"
+    process = None
+    try:
+        process = subprocess.Popen(
+            ["systemctl", "--user", "is-active", "hermes-gateway.service"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        deadline = time.monotonic() + 1
+        output = bytearray()
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return "unknown"
+            readable, _, _ = select.select([process.stdout], [], [], remaining)
+            if not readable:
+                return "unknown"
+            chunk = os.read(
+                process.stdout.fileno(),
+                MAX_GATEWAY_OUTPUT_BYTES + 1 - len(output),
+            )
+            if not chunk:
+                break
+            output.extend(chunk)
+            if len(output) > MAX_GATEWAY_OUTPUT_BYTES:
+                return "unknown"
+        process.wait(timeout=max(0.01, deadline - time.monotonic()))
+        observed = output.decode("ascii").strip()
+        return observed if observed in GATEWAY_STATES else "unknown"
+    except (OSError, subprocess.TimeoutExpired, UnicodeDecodeError, ValueError):
+        return "unknown"
+    finally:
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait()
+
+
+def collect(args):
+    now = args.now if args.now is not None else time.time()
+    session = None
+    active_workers = 0
+    runtime_snapshot = None
+    database_available = False
+    db_path = Path(args.db).expanduser()
+    if db_path.is_file():
+        try:
+            with open_read_only_database(db_path) as connection:
+                session = latest_session(connection)
+                active_workers = active_worker_count(connection)
+            if not valid_session(session, now):
+                session = None
+                active_workers = 0
+                database_available = False
+            else:
+                database_available = True
+        except (sqlite3.Error, ValueError):
+            session = None
+            active_workers = 0
+            database_available = False
+
+    runtime_path = Path(args.runtime_state).expanduser()
+    candidate = read_runtime_candidate(runtime_path)
+    if candidate is not None:
+        try:
+            updated_at = candidate.get("updatedAt") if isinstance(candidate, dict) else None
+            age = now - updated_at if is_finite_epoch(updated_at) else math.inf
+            expected_keys = {"state", "updatedAt", "task", "detail", "endReason"}
+            candidate_state = candidate.get("state") if isinstance(candidate, dict) else None
+            end_reason = candidate.get("endReason") if isinstance(candidate, dict) else None
+            terminal_reason_valid = (
+                (candidate_state == "completed" and end_reason in SUCCESS_END_REASONS)
+                or (candidate_state == "failed" and end_reason in FAILURE_END_REASONS)
+                or (candidate_state not in ("completed", "failed") and end_reason is None)
+            )
+            if (
+                isinstance(candidate, dict)
+                and set(candidate) <= expected_keys
+                and candidate_state in STATE_SIGNALS
+                and valid_text(candidate.get("task"), MAX_TASK_LENGTH)
+                and valid_text(candidate.get("detail"), MAX_DETAIL_LENGTH)
+                and terminal_reason_valid
+                and 0 <= age <= args.runtime_max_age
+            ):
+                runtime_snapshot = candidate
+        except (ValueError, KeyError, TypeError):
+            pass
+
+    if active_workers > 0:
+        runtime_snapshot = None
+
+    state = "idle"
+    signal = "muted"
+    confidence = "observed" if database_available else "unknown"
+    if active_workers > 0:
+        state = "executing"
+        signal = "cyan"
+        confidence = "observed"
+    elif session and session["ended_at"] is None and 0 <= now - session["last_activity_at"] <= args.fresh_seconds:
+        state = "executing"
+        signal = "cyan"
+        confidence = "inferred"
+    elif session and session["ended_at"] is not None and 0 <= now - session["ended_at"] <= args.terminal_seconds:
+        end_reason = session["end_reason"] or ""
+        if end_reason in FAILURE_END_REASONS:
+            state = "failed"
+            signal = "red"
+        elif end_reason in SUCCESS_END_REASONS:
+            state = "completed"
+            signal = "green"
+        else:
+            state = "unknown"
+            signal = "muted"
+
+    agent_available = (
+        shutil.which("hermes") is not None
+        if args.agent_available == "auto"
+        else args.agent_available == "yes"
+    )
+
+    if runtime_snapshot:
+        state = runtime_snapshot["state"]
+        signal = STATE_SIGNALS[state]
+        confidence = "explicit"
+
+    if active_workers == 0 and not agent_available:
+        state = "unavailable"
+        signal = "muted"
+        confidence = "observed"
+    elif not database_available and not runtime_snapshot:
+        state = "unknown"
+        signal = "muted"
+        confidence = "unknown"
+
+    task = runtime_snapshot.get("task") if runtime_snapshot else None
+    detail = runtime_snapshot.get("detail") if runtime_snapshot else None
+
+    return {
+        "schemaVersion": 1,
+        "observedAt": iso_time(now),
+        "state": state,
+        "signal": signal,
+        "node": args.node or socket.gethostname(),
+        "gateway": {"state": gateway_state(args.gateway_state)},
+        "agent": {"id": "hermes", "name": "Hermes", "available": agent_available},
+        "activity": {
+            "sessionId": session["id"] if session else None,
+            "task": task if task is not None else (session["title"] if session else None),
+            "detail": detail,
+            "lastActivityAt": iso_time(session["last_activity_at"]) if session else None,
+            "lastActivity": session["last_activity_description"] if session else None,
+            "endReason": (
+                runtime_snapshot.get("endReason")
+                if runtime_snapshot
+                else (session["end_reason"] if session else None)
+            ),
+            "activeWorkers": active_workers,
+        },
+        "runtime": {
+            "model": session["model"] if session else None,
+            "provider": session["billing_provider"] if session else None,
+        },
+        "source": {
+            "adapter": "hermes-local",
+            "confidence": confidence,
+        },
+    }
+
+
+def validation_errors(record):
+    if not isinstance(record, dict):
+        return ["top level must be object"]
+
+    errors = []
+    expected_top = {
+        "schemaVersion", "observedAt", "state", "signal", "node",
+        "gateway", "agent", "activity", "runtime", "source",
+    }
+    for key in sorted(expected_top - record.keys()):
+        errors.append(f"missing {key}")
+    for key in sorted(record.keys() - expected_top):
+        errors.append(f"unexpected {key}")
+
+    if isinstance(record.get("schemaVersion"), bool) or record.get("schemaVersion") != 1:
+        errors.append("schemaVersion must be 1")
+    observed_at = record.get("observedAt")
+    if not is_date_time(observed_at):
+        errors.append("observedAt must be date-time")
+    state = record.get("state")
+    if not isinstance(state, str) or state not in STATE_SIGNALS:
+        errors.append("state is not recognized")
+    elif record.get("signal") != STATE_SIGNALS[state]:
+        errors.append(f"signal must be {STATE_SIGNALS[state]} for {state}")
+    if not isinstance(record.get("node"), str) or not record.get("node"):
+        errors.append("node must be non-empty string")
+
+    nested = {
+        "gateway": {"state"},
+        "agent": {"id", "name", "available"},
+        "activity": {
+            "sessionId", "task", "detail", "lastActivityAt", "lastActivity",
+            "endReason", "activeWorkers",
+        },
+        "runtime": {"model", "provider"},
+        "source": {"adapter", "confidence"},
+    }
+    for name, expected_keys in nested.items():
+        value = record.get(name)
+        if not isinstance(value, dict):
+            errors.append(f"{name} must be object")
+            continue
+        for key in sorted(expected_keys - value.keys()):
+            errors.append(f"missing {name}.{key}")
+        for key in sorted(value.keys() - expected_keys):
+            errors.append(f"unexpected {name}.{key}")
+
+    gateway = record.get("gateway")
+    if isinstance(gateway, dict):
+        observed_gateway = gateway.get("state")
+        if not isinstance(observed_gateway, str) or observed_gateway not in GATEWAY_STATES:
+            errors.append("gateway.state is not recognized")
+
+    agent = record.get("agent")
+    if isinstance(agent, dict):
+        for key in ("id", "name"):
+            if not isinstance(agent.get(key), str) or not agent.get(key):
+                errors.append(f"agent.{key} must be non-empty string")
+        if not isinstance(agent.get("available"), bool):
+            errors.append("agent.available must be boolean")
+
+    activity = record.get("activity")
+    if isinstance(activity, dict):
+        nullable_strings = (
+            "sessionId", "task", "detail", "lastActivityAt", "lastActivity", "endReason",
+        )
+        for key in nullable_strings:
+            if activity.get(key) is not None and not isinstance(activity.get(key), str):
+                errors.append(f"activity.{key} must be string or null")
+        last_activity_at = activity.get("lastActivityAt")
+        if last_activity_at is not None and not is_date_time(last_activity_at):
+            errors.append("activity.lastActivityAt must be date-time or null")
+        end_reason = activity.get("endReason")
+        if state == "completed" and (
+            not isinstance(end_reason, str) or end_reason not in SUCCESS_END_REASONS
+        ):
+            errors.append("activity.endReason is not valid for completed")
+        elif state == "failed" and (
+            not isinstance(end_reason, str) or end_reason not in FAILURE_END_REASONS
+        ):
+            errors.append("activity.endReason is not valid for failed")
+        workers = activity.get("activeWorkers")
+        workers_is_integer = (
+            not isinstance(workers, bool)
+            and (
+                isinstance(workers, int)
+                or (isinstance(workers, float) and math.isfinite(workers) and workers.is_integer())
+            )
+        )
+        if not workers_is_integer or workers < 0:
+            errors.append("activity.activeWorkers must be non-negative integer")
+
+    runtime = record.get("runtime")
+    if isinstance(runtime, dict):
+        for key in ("model", "provider"):
+            if runtime.get(key) is not None and not isinstance(runtime.get(key), str):
+                errors.append(f"runtime.{key} must be string or null")
+
+    source = record.get("source")
+    if isinstance(source, dict):
+        if not isinstance(source.get("adapter"), str) or not source.get("adapter"):
+            errors.append("source.adapter must be non-empty string")
+        if source.get("confidence") not in ("observed", "inferred", "explicit", "unknown"):
+            errors.append("source.confidence is not recognized")
+    return errors
+
+
+def validate(args):
+    try:
+        if args.path == "-":
+            payload = sys.stdin.buffer.read(MAX_VALIDATION_INPUT_BYTES + 1)
+            if len(payload) > MAX_VALIDATION_INPUT_BYTES:
+                raise ValueError(f"input exceeds {MAX_VALIDATION_INPUT_BYTES} bytes")
+        else:
+            payload = read_bounded_regular_file(
+                Path(args.path), MAX_VALIDATION_INPUT_BYTES
+            )
+        record = json.loads(payload)
+    except (
+        OSError,
+        ValueError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        RecursionError,
+    ) as error:
+        print(f"invalid JSON: {error}", file=sys.stderr)
+        return 1
+    errors = validation_errors(record)
+    if errors:
+        for error in errors:
+            print(f"invalid: {error}", file=sys.stderr)
+        return 1
+    print("valid")
+    return 0
+
+
+def parser():
+    root = argparse.ArgumentParser()
+    commands = root.add_subparsers(dest="command", required=True)
+    collect_parser = commands.add_parser("collect")
+    hermes_home = Path(os.environ.get("HERMES_HOME", "~/.hermes")).expanduser()
+    collect_parser.add_argument("--db", default=str(hermes_home / "state.db"))
+    collect_parser.add_argument("--now", type=finite_timestamp_argument)
+    collect_parser.add_argument("--gateway-state", default="auto")
+    collect_parser.add_argument("--node")
+    collect_parser.add_argument("--fresh-seconds", type=int, default=300)
+    collect_parser.add_argument("--terminal-seconds", type=int, default=300)
+    collect_parser.add_argument(
+        "--runtime-state",
+        default="~/.local/state/hermarchy/runtime.json",
+    )
+    collect_parser.add_argument("--runtime-max-age", type=int, default=60)
+    collect_parser.add_argument(
+        "--agent-available",
+        choices=("auto", "yes", "no"),
+        default="auto",
+    )
+    validate_parser = commands.add_parser("validate")
+    validate_parser.add_argument("path")
+    return root
+
+
+def main():
+    args = parser().parse_args()
+    if args.command == "collect":
+        print(json.dumps(collect(args), separators=(",", ":"), sort_keys=True))
+        return 0
+    if args.command == "validate":
+        return validate(args)
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
