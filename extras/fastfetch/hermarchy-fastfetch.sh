@@ -12,10 +12,12 @@ else
   gateway="${muted}OFFLINE${reset}"
 fi
 
+node_name=${HERMARCHY_NODE_NAME:-$(hostname)}
+
 printf '\n%s          /\\-_=+|< -/= ~:*-/\n\n%s          H E R M A R C H Y%s\n\n' "$cyan" "$white" "$reset"
 printf '%sTHEME     %sHermarchy%s\n' "$muted" "$white" "$reset"
 printf '%sGATEWAY   %b\n' "$muted" "$gateway"
-printf '%sNODE      %sOMARCHY-01%s\n\n' "$muted" "$white" "$reset"
+printf '%sNODE      %s%s%s\n\n' "$muted" "$white" "$node_name" "$reset"
 printf '%s────────────────────────────────────────%s\n\n' "$muted" "$reset"
 
 fastfetch \

@@ -86,7 +86,9 @@ The optional status integrations are intentionally opt-in:
 ```
 
 It presents the node, local agent gateway state, and a restrained system summary
-using the theme's semantic colors.
+using the theme's semantic colors. The node defaults to the machine hostname;
+set `HERMARCHY_NODE_NAME` to provide a deliberate display name such as
+`RIPPER`, `ORNITH`, or `LAB-01`.
 
 ### Waybar
 
