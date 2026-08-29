@@ -234,14 +234,27 @@ class QuickshellPluginTests(unittest.TestCase):
         self.assertIn('text: root.indicator.label', bar)
         self.assertIn('text: root.indicator.suffix', bar)
         self.assertNotIn("activeModel", bar)
-        self.assertIn("panel.fittedContentHeight(content.implicitHeight, Style.space(300))", panel)
+        self.assertIn("panel.fittedContentHeight(content.implicitHeight, Style.space(440))", panel)
         self.assertIn("elide: Text.ElideRight", panel)
+        self.assertIn("maximumLineCount: 2", panel)
+        self.assertIn("wrapMode: Text.WrapAnywhere", panel)
         self.assertNotIn("Text.ElideLeft", panel)
-        self.assertNotIn("presentation.detail", panel)
+        self.assertIn("root.presentation.detail", panel)
+        self.assertIn("root.presentation.provider", panel)
+        self.assertIn("root.presentation.lastActivity", panel)
+        self.assertIn("root.presentation.lastActivityAt", panel)
+        self.assertNotIn("root.presentation.lastEvent", panel)
+        self.assertIn("root.presentation.endReason", panel)
         self.assertIn("command: [root.readerPath]", panel)
         self.assertNotIn('command: ["bash", root.readerPath]', panel)
-        for label in ("01 // AGENT", "TASK", "MODEL", "WORKERS", "NODE", "GATEWAY", "LAST EVENT"):
+        for label in (
+            "01 // AGENT", "TASK", "DETAIL", "MODEL", "PROVIDER", "WORKERS",
+            "NODE", "GATEWAY", "LAST ACTIVITY", "ACTIVITY AT", "END REASON",
+        ):
             self.assertIn(label, panel)
+        for forbidden in ("TOKENS", "CONTEXT", "MEMORY", "SKILLS", "TOOLS", "UTILIZATION"):
+            self.assertNotIn(forbidden, bar)
+            self.assertNotIn(forbidden, panel)
         for color in ("#61D6FF", "#E2C275", "#86D993", "#E46E6E"):
             self.assertIn(color, panel)
 

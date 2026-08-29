@@ -48,15 +48,18 @@ TestCase {
     state.signal = "cyan"
 
     var panel = StateModel.panel(state)
+    compare(panel.agentName, "HERMES")
     compare(panel.state, "EXECUTING")
     compare(panel.task, "Provider enrichment")
+    compare(panel.detail, "Delegating evidence checks")
     compare(panel.model, "GPT-5.6 SOL")
+    compare(panel.provider, "OPENAI CODEX")
     compare(panel.workers, "02 ACTIVE")
     compare(panel.node, "RIPPER")
     compare(panel.gateway, "ACTIVE")
-    compare(panel.lastEvent, "03:33:07")
-    verify(panel.detail === undefined)
-    verify(panel.provider === undefined)
+    compare(panel.lastActivity, "Running workers")
+    compare(panel.lastActivityAt, "03:33:07 Z")
+    compare(panel.endReason, "—")
   }
 
   function test_invalidOrMismatchedRecordsFailMuted() {
@@ -92,6 +95,48 @@ TestCase {
       compare(accepted.state, "unknown", "malformed record " + index + " was accepted")
       compare(accepted.signal, "muted", "malformed record " + index + " was not muted")
     }
+  }
+
+  function test_allSupportedStatesKeepTextAndSignalInSync() {
+    var cases = [
+      ["idle", "muted", "·", null],
+      ["executing", "cyan", "●", null],
+      ["waiting", "amber", "● INPUT", null],
+      ["completed", "green", "● DONE", "completed"],
+      ["failed", "red", "● FAILED", "tool_error"],
+      ["unavailable", "muted", "·", null],
+      ["unknown", "muted", "·", null]
+    ]
+
+    for (var index = 0; index < cases.length; index++) {
+      var state = baseState()
+      state.state = cases[index][0]
+      state.signal = cases[index][1]
+      state.activity.endReason = cases[index][3]
+      var indicator = StateModel.indicator(state)
+      compare(indicator.suffix, cases[index][2], state.state)
+      compare(indicator.signal, cases[index][1], state.state)
+      compare(StateModel.panel(state).state, state.state.toUpperCase(), state.state)
+    }
+  }
+
+  function test_missingOptionalFieldsUseQuietFallbacks() {
+    var state = baseState()
+    state.activity.task = null
+    state.activity.detail = null
+    state.activity.lastActivityAt = null
+    state.activity.lastActivity = null
+    state.runtime.model = null
+    state.runtime.provider = null
+
+    var panel = StateModel.panel(state)
+    compare(panel.task, "—")
+    compare(panel.detail, "—")
+    compare(panel.model, "—")
+    compare(panel.provider, "—")
+    compare(panel.lastActivity, "—")
+    compare(panel.endReason, "—")
+    compare(panel.lastActivityAt, "—")
   }
 
   function test_completedStateHasCompactDoneSuffix() {

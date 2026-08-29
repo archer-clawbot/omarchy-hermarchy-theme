@@ -105,8 +105,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(410))
-    contentHeight: panel.fittedContentHeight(content.implicitHeight, Style.space(300))
+    contentWidth: panel.fittedContentWidth(Style.space(420))
+    contentHeight: panel.fittedContentHeight(content.implicitHeight, Style.space(440))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -134,12 +134,14 @@ Panel {
           spacing: Style.space(8)
 
           Text {
-            text: "HERMES"
+            width: Math.min(implicitWidth, parent.width * 0.52)
+            text: root.presentation.agentName
             color: root.foreground
             font.family: root.fontFamily
             font.pixelSize: Style.font.title
             font.bold: true
             font.letterSpacing: 1.1
+            elide: Text.ElideRight
           }
 
           Text {
@@ -168,14 +170,66 @@ Panel {
         Column {
           width: parent.width
           spacing: Style.space(9)
-          InfoRow { label: "TASK"; value: root.presentation.task }
+          ActivityText { label: "TASK"; value: root.presentation.task }
+          ActivityText {
+            label: "DETAIL"
+            value: root.presentation.detail
+            visible: value !== "—"
+          }
           InfoRow { label: "MODEL"; value: root.presentation.model }
+          InfoRow {
+            label: "PROVIDER"
+            value: root.presentation.provider
+            visible: value !== "—"
+          }
           InfoRow { label: "WORKERS"; value: root.presentation.workers }
           InfoRow { label: "NODE"; value: root.presentation.node }
           InfoRow { label: "GATEWAY"; value: root.presentation.gateway }
-          InfoRow { label: "LAST EVENT"; value: root.presentation.lastEvent }
+          ActivityText {
+            label: "LAST ACTIVITY"
+            value: root.presentation.lastActivity
+            visible: value !== "—"
+          }
+          InfoRow {
+            label: "ACTIVITY AT"
+            value: root.presentation.lastActivityAt
+            visible: value !== "—"
+          }
+          InfoRow {
+            label: "END REASON"
+            value: root.presentation.endReason
+            visible: value !== "—"
+          }
         }
       }
+    }
+  }
+
+  component ActivityText: Column {
+    id: activityText
+    property string label: ""
+    property string value: ""
+    width: parent.width
+    spacing: Style.space(3)
+
+    Text {
+      text: activityText.label
+      color: root.mutedColor
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      font.letterSpacing: 0.9
+    }
+
+    Text {
+      width: activityText.width
+      text: activityText.value
+      color: root.foreground
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.bodySmall
+      font.bold: true
+      wrapMode: Text.WrapAnywhere
+      maximumLineCount: 2
+      elide: Text.ElideRight
     }
   }
 

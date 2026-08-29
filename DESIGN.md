@@ -113,4 +113,6 @@ color must correspond to observable state:
 - red: an explicit recent failure.
 
 Waiting is never inferred from an old open session. Runtime snapshots expire so
-a crashed producer cannot leave the environment permanently illuminated.
+a crashed producer cannot leave the environment permanently illuminated. The
+persistent bar carries only the semantic state; the expanded panel may render
+additional validated contract fields, but never invented telemetry.

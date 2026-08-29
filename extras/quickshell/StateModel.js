@@ -147,8 +147,8 @@ function modelName(value) {
 
 function eventTime(value) {
   var text = display(value, "")
-  var match = text.match(/^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})/)
-  return match ? match[1] : "—"
+  var match = text.match(/^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/)
+  return match ? match[1] + " " + match[2] : "—"
 }
 
 function workerText(value) {
@@ -157,15 +157,24 @@ function workerText(value) {
   return padded + (count === 1 ? " ACTIVE" : " ACTIVE")
 }
 
+function upperWords(value) {
+  return display(value, "—").replace(/[-_]/g, " ").toUpperCase()
+}
+
 function panel(value) {
   var state = accept(value)
   return {
+    agentName: upperWords(state.agent.name),
     state: state.state.toUpperCase(),
     task: display(state.activity.task, "—"),
+    detail: display(state.activity.detail, "—"),
     model: modelName(state.runtime.model),
+    provider: upperWords(state.runtime.provider),
     workers: workerText(state.activity.activeWorkers),
-    node: display(state.node, "—").toUpperCase(),
-    gateway: display(state.gateway.state, "unknown").toUpperCase(),
-    lastEvent: eventTime(state.activity.lastActivityAt || state.observedAt)
+    node: upperWords(state.node),
+    gateway: upperWords(state.gateway.state),
+    lastActivity: display(state.activity.lastActivity, "—"),
+    lastActivityAt: eventTime(state.activity.lastActivityAt),
+    endReason: upperWords(state.activity.endReason)
   }
 }

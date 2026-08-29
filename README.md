@@ -92,8 +92,10 @@ a background service. See
 
 `extras/quickshell/` closes the visual loop with an optional user-local Omarchy
 plugin. Its persistent bar label stays small (`HERMES ·` or `HERMES ●`), while
-clicking it opens a restrained numbered panel for task, model, workers, node,
-gateway, and last event. The plugin runs the adapter and validates that exact
+clicking it opens a restrained numbered panel for validated agent/state,
+activity, runtime, worker, node, gateway, and terminal-reason data. Optional
+values disappear quietly, long content stays bounded, and no speculative
+telemetry is rendered. The plugin runs the adapter and validates that exact
 record before rendering it; malformed or failed refreshes fall back to a muted
 unknown state. Install it explicitly with:
 

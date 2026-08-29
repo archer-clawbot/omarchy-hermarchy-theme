@@ -14,9 +14,12 @@ unavailable  HERMES ·          muted
 unknown      HERMES ·          muted
 ```
 
-The panel shows only contract-backed fields: task, model, active workers, node,
-gateway, and last event. It does not display token, context, memory, or
-utilization guesses.
+The panel shows only contract-backed fields: agent name and state, task and detail,
+model and provider, active workers, node, gateway, last activity, and end reason.
+Optional values are omitted when absent; long activity text is bounded to two
+lines and metadata is right-elided so the meaningful prefix survives on narrow
+displays. It does not display token, context, memory, skill, tool, or utilization
+guesses.
 
 ## Architecture
 
