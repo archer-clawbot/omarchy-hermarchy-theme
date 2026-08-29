@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets/source"
 BACKGROUNDS = ROOT / "backgrounds"
 W, H = 3840, 2400
+FLAGSHIP_SOURCE_CENTER_Y = 1050
+FLAGSHIP_VERTICAL_SHIFT = H // 2 - FLAGSHIP_SOURCE_CENTER_Y
 SOURCE.mkdir(parents=True, exist_ok=True)
 BACKGROUNDS.mkdir(parents=True, exist_ok=True)
 
@@ -53,13 +55,15 @@ def wallpaper_one() -> str:
 </defs>
 {frame()}
 <rect x="128" y="128" width="3584" height="2144" fill="url(#grid)"/>
-<circle cx="1920" cy="1050" r="980" fill="url(#halo)"/>
-{lines(1920,1050,370,940,96,CYAN,.045)}
+<g transform="translate(0 {FLAGSHIP_VERTICAL_SHIFT})">
+<circle cx="1920" cy="{FLAGSHIP_SOURCE_CENTER_Y}" r="980" fill="url(#halo)"/>
+{lines(1920,FLAGSHIP_SOURCE_CENTER_Y,370,940,96,CYAN,.045)}
 <g text-anchor="middle">
  <text x="1920" y="925" fill="{WHITE}" font-family="IBM Plex Sans,Inter,DejaVu Sans,sans-serif" font-size="186" font-weight="500" letter-spacing="54">HERMARCHY</text>
  <text x="1920" y="1055" fill="{CYAN}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="36" letter-spacing="18">/\\-_=+|&lt; -/= ~:*-/</text>
  <text x="1920" y="1195" fill="{SECONDARY}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="26" letter-spacing="12">AGENT ENVIRONMENT</text>
  <text x="1920" y="1250" fill="{MUTED}" font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="20" letter-spacing="10">OMARCHY AGENT THEME</text>
+</g>
 </g>
 <g font-family="IBM Plex Mono,JetBrains Mono,DejaVu Sans Mono,monospace" font-size="21" letter-spacing="4">
  <text x="170" y="1850" fill="{CYAN}">HERMARCHY::NODE</text>
