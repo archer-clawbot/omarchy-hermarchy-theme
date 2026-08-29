@@ -11,7 +11,7 @@ TestCase {
       observedAt: "2033-05-18T03:33:20Z",
       state: "idle",
       signal: "muted",
-      node: "ripper",
+      node: "workstation",
       gateway: { state: "active" },
       agent: { id: "hermes", name: "Hermes", available: true },
       activity: {
@@ -55,7 +55,7 @@ TestCase {
     compare(panel.model, "GPT-5.6 SOL")
     compare(panel.provider, "OPENAI CODEX")
     compare(panel.workers, "02 ACTIVE")
-    compare(panel.node, "RIPPER")
+    compare(panel.node, "WORKSTATION")
     compare(panel.gateway, "ACTIVE")
     compare(panel.lastActivity, "Running workers")
     compare(panel.lastActivityAt, "03:33:07 Z")

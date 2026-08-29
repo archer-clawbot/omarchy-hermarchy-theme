@@ -1,176 +1,223 @@
 # Hermarchy for Omarchy
 
-![Hermarchy desktop](preview.png)
+![Hermarchy desktop with optional agent panel](preview.png)
 
-A precision agent command environment for [Omarchy](https://omarchy.org/).
-Hermarchy is an independent community theme: human content is warm white,
-system structure is graphite, and cyan appears only when an agent or machine is
-active.
+*Hermarchy base theme with the optional agent-aware panel enabled.*
 
-```text
-HUMAN LAYER   warm white   documents, text, primary UI
-SYSTEM LAYER  graphite     borders, metadata, inactive state
-AGENT LAYER   cyan         execution, focus, agent status
-```
+A restrained research-workstation theme for [Omarchy](https://omarchy.org/),
+with an optional Hermes-aware status surface.
 
-## Install
+## What Hermarchy is
 
-### Omarchy menu
+Hermarchy coordinates Omarchy's desktop, shell, launcher, terminal/editor
+palettes, notifications, browser accents, lock screen, TUI surfaces, and three
+original wallpapers. It is an independent community theme; Hermes integration
+is optional and separately installed.
 
-Open `Super + Space`, choose **Install > Style > Theme**, and paste:
+## What it looks like
+
+Near-black and graphite structure keep the desktop quiet. Warm white carries
+human-readable content. Thin rules, sparse system labels, and compact status
+surfaces provide hierarchy without glow, blur, or decorative effects.
+
+The base installation works immediately across Omarchy's generated theme
+surfaces and includes three 3840×2400 wallpapers plus a transparent lock mark.
+
+## Cyan is semantic, not decorative
+
+Hermarchy is approximately 95% monochrome and 5% signal color:
+
+- warm white: human content;
+- graphite: system structure and inactive state;
+- cyan: active focus or agent execution only;
+- amber: explicit human input;
+- green/red: temporary completed/failed outcomes.
+
+The base theme uses cyan sparingly for focus. The optional agent indicator uses
+it only when validated state says an agent is executing.
+
+## Install the base theme
+
+In the Omarchy menu (`Super + Space`), choose **Install > Style > Theme** and
+paste:
 
 ```text
 https://github.com/archer-clawbot/omarchy-hermarchy-theme.git
 ```
 
-### Terminal
+Or use the terminal:
 
 ```sh
 omarchy theme install https://github.com/archer-clawbot/omarchy-hermarchy-theme.git
 omarchy theme set hermarchy
 ```
 
-The repository name gives the theme its stable slug and display identity:
-**Hermarchy**.
-
-Cycle the three included backgrounds with:
+The install command activates the theme; the explicit `set` command is safe to
+repeat. Cycle the included wallpapers with:
 
 ```sh
 omarchy theme bg next
 ```
 
-## Visual system
+The base theme does not install Hermes, the collector, or the Quickshell
+plugin. After this step, only passive theme assets and Omarchy-generated
+application palettes are active.
 
-| Layer | Role | Color |
-|---|---|---|
-| Human | Primary text | `#F1F1EC` |
-| Human | Secondary text | `#9B9E9F` |
-| System | Background | `#08090A` |
-| System | Surface | `#101214` |
-| System | Raised surface | `#16191C` |
-| System | Border | `#272B2F` |
-| System | Muted metadata | `#606468` |
-| Agent | Signal | `#61D6FF` |
-| Agent | Active signal | `#8DE4FF` |
-| State | Success | `#86D993` |
-| State | Warning | `#E2C275` |
-| State | Error | `#E46E6E` |
+## Optional agent-aware integration
 
-The governing rule is **95% monochrome, 5% signal color**. Cyan is semantic,
-not decorative.
-
-## Included
-
-- Current Omarchy `colors.toml` semantic contract
-- Native Omarchy/Quickshell surfaces through `shell.toml`
-- Generated terminal, Neovim, GTK, editor, and TUI palettes
-- Walker, Waybar, Mako, Hyprlock, Chromium, icons, and btop accents
-- Three original 3840×2400 command-environment wallpapers
-- A transparent Hermarchy lock-screen mark
-- A real 1920×1080 Omarchy desktop preview
-- A gallery-ready 1200×675 WebP
-- Reproducible SVG/PNG artwork generator
-- Optional read-only agent-status helpers
-
-## Optional agent integration
-
-Modern Omarchy exposes installed agents through its native Agents panel. This
-theme styles that surface without patching package-managed files.
-
-The optional status integrations are intentionally opt-in:
-
-### Agent state contract
-
-`extras/agent-integration/` contains the first Tier 2 component: a versioned,
-provider-neutral JSON state contract, a strict validator, and a read-only local
-Hermes adapter. It distinguishes idle, executing, waiting for human input,
-completed, failed, unavailable, and unknown without patching Omarchy or running
-a background service. See
-[`extras/agent-integration/README.md`](extras/agent-integration/README.md).
-
-### Quickshell agent surface
-
-`extras/quickshell/` closes the visual loop with an optional user-local Omarchy
-plugin. Its persistent bar label stays small (`HERMES ·` or `HERMES ●`), while
-clicking it opens a restrained numbered panel for validated agent/state,
-activity, runtime, worker, node, gateway, and terminal-reason data. Optional
-values disappear quietly, long content stays bounded, and no speculative
-telemetry is rendered. The plugin runs the adapter and validates that exact
-record before rendering it; malformed or failed refreshes fall back to a muted
-unknown state. Install it explicitly with:
+This step is opt-in. It installs a read-only local adapter and a supported
+user-local Quickshell plugin; it does not install or configure Hermes.
 
 ```sh
-./extras/quickshell/install.sh
+theme_dir="$(omarchy theme dir hermarchy)"
+"$theme_dir/extras/quickshell/install.sh"
 ```
 
-The theme installer never installs or enables this component automatically.
+The bar gains a compact `HERMES` state signal. Clicking it opens a bounded panel
+using only validated local state. If Hermes is absent or state cannot be read,
+the indicator remains muted and reports unavailable/unknown rather than
+claiming activity.
 
-### Fastfetch
+Install without enabling the bar widget:
 
 ```sh
-./extras/fastfetch/hermarchy-fastfetch.sh
+"$theme_dir/extras/quickshell/install.sh" --no-enable
 ```
 
-It presents the node, local agent gateway state, and a restrained system summary
-using the theme's semantic colors. The node defaults to the machine hostname;
-set `HERMARCHY_NODE_NAME` to provide a deliberate display name such as
-`RIPPER`, `ORNITH`, or `LAB-01`.
-
-### Waybar
-
-Current Omarchy uses Quickshell rather than Waybar. Older installations and
-Waybar users can add the JSON status module documented in
-`extras/waybar/README.md`. It reports agent availability and never starts or
-modifies a service.
-
-## Design boundaries
-
-A theme repository can coordinate color, surfaces, wallpaper, lock screen,
-terminal, editor, browser, launcher, notifications, and TUI applications. It
-cannot safely replace Omarchy's package-owned Quickshell layout, rewrite the
-user's shell prompt, or add compositor behavior. Hermarchy therefore uses
-Omarchy's supported user-local plugin API for its optional agent surface and
-keeps that installation separate from the theme installer.
-
-The active border is therefore a precise neutral hairline. Cyan focus appears
-inside controls and agent state surfaces; no global compositor files are
-mutated.
-
-See [DESIGN.md](DESIGN.md) for the complete visual and semantic rationale.
-
-## Rebuild artwork
-
-The checked-in PNG/WebP files are ready to use. To rebuild the original
-wallpapers and lock asset, install `librsvg`, then run:
+Then enable it later:
 
 ```sh
-python scripts/build_assets.py
+omarchy plugin enable io.github.archer-clawbot.hermarchy-agent --before omarchy.agents
 ```
 
-A gallery screenshot must be captured from a real themed desktop. It is not
-synthesized by the artwork script. Convert the approved screenshot with:
+See [the optional integration guide](extras/quickshell/README.md) for state
+behavior and [the installation guide](docs/INSTALLATION.md) for recovery and
+removal.
+
+## Requirements
+
+- Base theme: Omarchy v4 with `git`; no Hermes installation is required.
+- Optional agent UI: Omarchy's user-local plugin API, Quickshell, Linux,
+  `python3`, and `omarchy`.
+- Hermes is optional. Without it, the installed agent surface fails muted.
+- Current Omarchy uses Quickshell. The Waybar helper under `extras/waybar/` is a
+  manual legacy path, not a current-shell fallback installed by the theme.
+
+Verified versions and narrower compatibility claims are listed in
+[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+
+## Update
+
+Update all git-installed themes, then reapply Hermarchy:
 
 ```sh
-magick preview.png -strip -resize '1200>' -quality 80 gallery-preview.webp
+omarchy theme update
+omarchy theme set hermarchy
 ```
 
-## Gallery submission
+The optional integration is a copied user-local payload, so update it explicitly
+after the theme clone updates:
 
-For `omacom/omarchy-site`, add `gallery-preview.webp` as:
-
-```text
-assets/themes/hermarchy.webp
+```sh
+theme_dir="$(omarchy theme dir hermarchy)"
+"$theme_dir/extras/quickshell/install.sh"
 ```
 
-Then add the alphabetized theme entry linking to this repository. The preview
-is a real Omarchy desktop capture, not a mockup.
+Rerunning the installer over an existing correct installation is supported.
 
-## Rights
+## Uninstall or disable
 
-All bundled artwork is original and generated from source under
-`assets/source/`. Hermarchy is an independent community theme and does not use
-third-party names, logos, or artwork as its identity. See `NOTICE`.
+Disable only the agent indicator while keeping its files:
 
-## License
+```sh
+omarchy plugin disable io.github.archer-clawbot.hermarchy-agent
+```
 
-Theme code and original artwork are released under the MIT License.
+Remove the optional plugin and, if no other workflow uses it, the adapter:
+
+```sh
+omarchy plugin remove io.github.archer-clawbot.hermarchy-agent --yes
+rm -- "$HOME/.local/bin/hermarchy-agent-state"
+```
+
+Omarchy may retain an inert backup and prints its exact path. Delete that backup
+only if you do not want rollback data.
+
+Before removing an active theme, switch to another installed theme:
+
+```sh
+omarchy theme set tokyo-night
+omarchy theme remove hermarchy
+```
+
+This restores normal Omarchy theming and removes only the user-installed clone.
+No uninstall step edits package-owned Omarchy files.
+
+## Troubleshooting
+
+- Theme not listed: run `omarchy theme list` and verify `Hermarchy` appears.
+- Wrong theme active: run `omarchy theme current`, then
+  `omarchy theme set hermarchy`.
+- Wallpaper does not change: run `omarchy theme bg current`, then
+  `omarchy theme bg next`.
+- Agent indicator missing: run `omarchy plugin list --json`, rescan with
+  `omarchy-shell shell rescanPlugins`, then run the documented enable command.
+- Agent state is muted: run
+  `"$HOME/.local/bin/hermarchy-agent-state" collect`; unavailable is expected
+  when Hermes is absent.
+- Partial optional install: rerun the same explicit installer. It replaces the
+  collector and plugin as one validated user-local transaction.
+
+Detailed first-run, update, recovery, and uninstall steps are in
+[docs/INSTALLATION.md](docs/INSTALLATION.md).
+
+## Architecture and safety boundaries
+
+The base theme is passive. Omarchy clones it to
+`~/.config/omarchy/themes/hermarchy`, filters executable theme inputs, and
+stages colors/assets into its user state. Hermarchy does not modify
+`/usr/share/omarchy`, `/usr/bin`, package-owned Quickshell, global Hyprland
+configuration, or Hermes runtime state.
+
+The optional integration installs only:
+
+- `~/.local/bin/hermarchy-agent-state`;
+- `~/.config/omarchy/plugins/io.github.archer-clawbot.hermarchy-agent`.
+
+It reads bounded local structured state, validates it, and fails muted. It does
+not start Hermes, contact remote nodes, invent telemetry, or patch the native
+shell. See [DESIGN.md](DESIGN.md) and the
+[agent contract guide](extras/agent-integration/README.md) for deeper details.
+
+## Gallery
+
+| Surface | Preview |
+|---|---|
+| Base desktop | ![Base desktop](docs/screenshots/desktop-overview.png) |
+| Launcher | ![Launcher](docs/screenshots/launcher.png) |
+| Terminal and editor | ![Terminal and editor](docs/screenshots/terminal-editor.png) |
+| Optional: executing | ![Agent executing](docs/screenshots/agent-executing.png) |
+| Optional: waiting for input | ![Agent waiting](docs/screenshots/agent-waiting.png) |
+| Optional: completed | ![Agent completed](docs/screenshots/agent-completed.png) |
+
+The gallery uses real Omarchy captures. Optional agent images are labeled so
+they do not imply that the base theme installs Hermes.
+
+## Development and testing
+
+Artwork source lives under `assets/source/`; rebuild wallpapers and the lock
+mark with `python3 scripts/build_assets.py` after installing `librsvg`. The
+artwork build never creates the real desktop preview.
+
+Run the distribution and integration suites with:
+
+```sh
+python3 -m unittest \
+  tests.test_distribution tests.test_agent_state tests.test_quickshell_plugin -v
+QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner \
+  -input tests/quickshell -import /usr/share/omarchy/shell
+```
+
+Release history and current limitations are in [CHANGELOG.md](CHANGELOG.md).
+Original artwork and code are MIT licensed; see [LICENSE](LICENSE) and
+[NOTICE](NOTICE).

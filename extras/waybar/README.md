@@ -8,7 +8,7 @@ Add this module to your Waybar configuration:
 
 ```jsonc
 "custom/hermarchy": {
-  "exec": "/path/to/omarchy-hermarchy-theme/extras/waybar/hermarchy-status.sh",
+  "exec": "$HOME/.config/omarchy/themes/hermarchy/extras/waybar/hermarchy-status.sh",
   "return-type": "json",
   "interval": 5
 }

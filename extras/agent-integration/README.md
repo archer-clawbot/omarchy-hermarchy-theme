@@ -42,11 +42,8 @@ before another source is considered.
 ## Collect and validate
 
 ```sh
-./extras/agent-integration/hermarchy-agent-state collect \
-  > /tmp/hermarchy-agent-state.json
-
-./extras/agent-integration/hermarchy-agent-state validate \
-  /tmp/hermarchy-agent-state.json
+./extras/agent-integration/hermarchy-agent-state collect |
+  ./extras/agent-integration/hermarchy-agent-state validate -
 ```
 
 Validation reads at most 64 KiB from stdin or a nonblocking, no-follow regular

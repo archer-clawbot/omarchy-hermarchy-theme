@@ -46,12 +46,22 @@ using it.
 The plugin never writes runtime state and does not patch package-owned Omarchy,
 Quickshell, or Hyprland files.
 
+## Requirements
+
+- Omarchy v4 with its user-local Quickshell plugin API;
+- Linux, `python3`, `omarchy`, and `omarchy-shell`;
+- Hermes only if live agent state is desired.
+
+Hermes is not installed or configured here. When its executable is absent, the
+validated result is `unavailable`/muted.
+
 ## Install
 
-From the theme repository:
+From the installed theme clone:
 
 ```sh
-./extras/quickshell/install.sh
+theme_dir="$(omarchy theme dir hermarchy)"
+"$theme_dir/extras/quickshell/install.sh"
 ```
 
 That explicit opt-in action:
@@ -78,7 +88,7 @@ That explicit opt-in action:
 To copy and validate without changing the active bar layout:
 
 ```sh
-./extras/quickshell/install.sh --no-enable
+"$theme_dir/extras/quickshell/install.sh" --no-enable
 ```
 
 Then enable it later:
@@ -89,6 +99,35 @@ omarchy plugin enable io.github.archer-clawbot.hermarchy-agent --before omarchy.
 
 Middle-click the bar signal to refresh immediately. The normal polling interval
 is two seconds and can be adjusted through Omarchy's bar widget settings.
+
+## Update, reinstall, or recover
+
+After `omarchy theme update`, rerun the installer from the refreshed theme
+clone:
+
+```sh
+theme_dir="$(omarchy theme dir hermarchy)"
+"$theme_dir/extras/quickshell/install.sh"
+```
+
+The same command supports an older complete payload, already-correct files, and
+a partial user-local installation where only the adapter or plugin remains. If
+copying completed while the shell was unavailable, rescan and enable after the
+shell starts:
+
+```sh
+omarchy-shell shell rescanPlugins
+omarchy plugin enable io.github.archer-clawbot.hermarchy-agent --before omarchy.agents
+```
+
+## Disable
+
+```sh
+omarchy plugin disable io.github.archer-clawbot.hermarchy-agent
+```
+
+Disabling removes the widget from the active bar but keeps its user-local files
+for later re-enablement.
 
 ## Remove
 
