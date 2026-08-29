@@ -218,6 +218,16 @@ QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner \
   -input tests/quickshell -import /usr/share/omarchy/shell
 ```
 
+GitHub Actions runs the headless Python suite with warnings as errors, Python
+and shell syntax checks, JSON/TOML/YAML parsing, the standalone QML state-model
+tests and lint, and repository hygiene checks on pull requests and pushes to
+`main`.
+
+A real Omarchy environment remains the manual release gate for theme
+installation, activation, wallpaper cycling, optional plugin validation and
+lifecycle, live Quickshell IPC, Hyprland integration, package integrity, and
+visual/privacy review. CI does not emulate a desktop session.
+
 Release history and current limitations are in [CHANGELOG.md](CHANGELOG.md).
 Original artwork and code are MIT licensed; see [LICENSE](LICENSE) and
 [NOTICE](NOTICE).

@@ -1,0 +1,91 @@
+name: Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Python, QML, and static checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            imagemagick \
+            python3-yaml \
+            qml6-module-qtquick \
+            qml6-module-qttest \
+            qt6-declarative-dev-tools
+
+      - name: Run Python unit tests with warnings as errors
+        env:
+          PYTHONWARNINGS: error
+        run: |
+          python3 -m unittest \
+            tests.test_distribution \
+            tests.test_agent_state \
+            tests.test_quickshell_plugin \
+            -v
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile \
+            scripts/build_assets.py \
+            tests/test_distribution.py \
+            tests/test_agent_state.py \
+            tests/test_quickshell_plugin.py \
+            extras/agent-integration/hermarchy-agent-state \
+            extras/quickshell/scripts/hermarchy-plugin-install \
+            extras/quickshell/scripts/hermarchy-state-read
+
+      - name: Check shell syntax
+        run: |
+          bash -n \
+            extras/fastfetch/hermarchy-fastfetch.sh \
+            extras/quickshell/install.sh \
+            extras/waybar/hermarchy-status.sh
+
+      - name: Parse JSON, TOML, and YAML
+        run: |
+          python3 - <<'PY'
+          import json
+          import tomllib
+          from pathlib import Path
+
+          import yaml
+
+          for path in Path(".").rglob("*.json"):
+              json.loads(path.read_text())
+          for path in Path(".").rglob("*.toml"):
+              tomllib.loads(path.read_text())
+          for pattern in ("*.yaml", "*.yml"):
+              for path in Path(".").rglob(pattern):
+                  yaml.safe_load(path.read_text())
+          PY
+
+      - name: Run headless QML tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          /usr/lib/qt6/bin/qmltestrunner -input tests/quickshell
+
+      - name: Lint standalone QML state-model test
+        run: |
+          /usr/lib/qt6/bin/qmllint tests/quickshell/tst_StateModel.qml
+
+      - name: Check repository hygiene
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain)"
