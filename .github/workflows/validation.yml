@@ -49,6 +49,7 @@ jobs:
         run: |
           python3 -m unittest \
             tests.test_distribution \
+            tests.test_toggle_theme \
             tests.test_agent_state \
             tests.test_quickshell_plugin \
             -v
@@ -58,6 +59,7 @@ jobs:
           python3 -m py_compile \
             scripts/build_assets.py \
             tests/test_distribution.py \
+            tests/test_toggle_theme.py \
             tests/test_agent_state.py \
             tests/test_quickshell_plugin.py \
             extras/agent-integration/hermarchy-agent-state \
