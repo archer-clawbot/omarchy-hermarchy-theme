@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.archer-clawbot.hermarchy-agent",
+  "name": "Hermarchy Agent",
+  "version": "0.1.0",
+  "author": "Cody",
+  "license": "MIT",
+  "description": "A restrained semantic Hermes state indicator and detail panel for Hermarchy.",
+  "kinds": ["bar-widget"],
+  "activation": "on-demand",
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Hermarchy Agent",
+    "description": "Validated agent state with semantic cyan, amber, green, and red signals.",
+    "category": "AI",
+    "aliases": ["hermes", "agent-state", "hermarchy"],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "refreshIntervalSec": 2
+    },
+    "schema": [
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds)",
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "defaultValue": 2
+      }
+    ]
+  }
+}

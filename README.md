@@ -88,6 +88,21 @@ completed, failed, unavailable, and unknown without patching Omarchy or running
 a background service. See
 [`extras/agent-integration/README.md`](extras/agent-integration/README.md).
 
+### Quickshell agent surface
+
+`extras/quickshell/` closes the visual loop with an optional user-local Omarchy
+plugin. Its persistent bar label stays small (`HERMES ·` or `HERMES ●`), while
+clicking it opens a restrained numbered panel for task, model, workers, node,
+gateway, and last event. The plugin runs the adapter and validates that exact
+record before rendering it; malformed or failed refreshes fall back to a muted
+unknown state. Install it explicitly with:
+
+```sh
+./extras/quickshell/install.sh
+```
+
+The theme installer never installs or enables this component automatically.
+
 ### Fastfetch
 
 ```sh
@@ -111,8 +126,9 @@ modifies a service.
 A theme repository can coordinate color, surfaces, wallpaper, lock screen,
 terminal, editor, browser, launcher, notifications, and TUI applications. It
 cannot safely replace Omarchy's package-owned Quickshell layout, rewrite the
-user's shell prompt, or add compositor behavior. Those changes are excluded by
-design rather than hidden in an installer.
+user's shell prompt, or add compositor behavior. Hermarchy therefore uses
+Omarchy's supported user-local plugin API for its optional agent surface and
+keeps that installation separate from the theme installer.
 
 The active border is therefore a precise neutral hairline. Cyan focus appears
 inside controls and agent state surfaces; no global compositor files are

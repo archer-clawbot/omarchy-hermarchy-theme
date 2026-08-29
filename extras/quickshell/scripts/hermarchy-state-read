@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Emit one bounded, validated agent-state record without orphaning children."""
+
+import ctypes
+import os
+import selectors
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+MAX_OUTPUT_BYTES = 65_536
+COLLECT_TIMEOUT_SECONDS = 5.0
+VALIDATE_TIMEOUT_SECONDS = 1.0
+TERMINATE_GRACE_SECONDS = 1.0
+PR_SET_CHILD_SUBREAPER = 36
+
+
+class ProcessTreeInspectionError(RuntimeError):
+    pass
+
+
+def enable_subreaper():
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) != 0:
+        raise OSError(ctypes.get_errno(), "prctl(PR_SET_CHILD_SUBREAPER) failed")
+
+
+def direct_children(pid):
+    process_path = Path(f"/proc/{pid}")
+    try:
+        text = (process_path / f"task/{pid}/children").read_text()
+    except (FileNotFoundError, ProcessLookupError) as error:
+        if not process_path.exists():
+            return []
+        raise ProcessTreeInspectionError(f"cannot inspect child list for {pid}") from error
+    except PermissionError as error:
+        raise ProcessTreeInspectionError(f"cannot inspect child list for {pid}") from error
+    return [int(value) for value in text.split()]
+
+
+def descendants():
+    found = []
+    pending = direct_children(os.getpid())
+    seen = set()
+    while pending:
+        pid = pending.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        found.append(pid)
+        pending.extend(direct_children(pid))
+    return found
+
+
+def signal_processes(pids, sig):
+    for pid in pids:
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            pass
+        except PermissionError:
+            return False
+    return True
+
+
+def reap_adopted_children():
+    while True:
+        try:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+        except ChildProcessError:
+            return
+        if pid == 0:
+            return
+
+
+def _contain_process_tree(process):
+    """Terminate and reap the whole subreaper tree; return whether it is gone."""
+    initial = descendants()
+    if not initial and process.poll() is not None:
+        return True, False
+
+    had_tree = bool(initial)
+    term_deadline = time.monotonic() + 0.1
+    while time.monotonic() < term_deadline:
+        current = descendants()
+        signal_processes(current, signal.SIGTERM)
+        process.poll()
+        if process.poll() is not None:
+            reap_adopted_children()
+        if not descendants():
+            return True, had_tree
+        time.sleep(0.01)
+
+    kill_deadline = time.monotonic() + TERMINATE_GRACE_SECONDS
+    while time.monotonic() < kill_deadline:
+        current = descendants()
+        if not signal_processes(current, signal.SIGKILL):
+            return False, had_tree
+        process.poll()
+        if process.poll() is not None:
+            reap_adopted_children()
+        if not descendants():
+            return True, had_tree
+        time.sleep(0.01)
+
+    return False, had_tree
+
+
+def contain_process_tree(process):
+    try:
+        return _contain_process_tree(process)
+    except ProcessTreeInspectionError:
+        pid = getattr(process, "pid", None)
+        if isinstance(pid, int):
+            try:
+                os.killpg(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+            try:
+                process.wait(timeout=TERMINATE_GRACE_SECONDS)
+            except (subprocess.TimeoutExpired, ChildProcessError):
+                pass
+        return False, True
+
+
+def collect(collector):
+    process = subprocess.Popen(
+        [collector, "collect"],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    payload = bytearray()
+    valid = False
+    deadline = time.monotonic() + COLLECT_TIMEOUT_SECONDS
+
+    try:
+        assert process.stdout is not None
+        descriptor = process.stdout.fileno()
+        os.set_blocking(descriptor, False)
+        with selectors.DefaultSelector() as selector:
+            selector.register(descriptor, selectors.EVENT_READ)
+            reached_eof = False
+            while not reached_eof:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                events = selector.select(min(remaining, 0.1))
+                for _, _ in events:
+                    try:
+                        chunk = os.read(descriptor, MAX_OUTPUT_BYTES + 1 - len(payload))
+                    except BlockingIOError:
+                        continue
+                    if not chunk:
+                        reached_eof = True
+                        break
+                    payload.extend(chunk)
+                    if len(payload) > MAX_OUTPUT_BYTES:
+                        break
+                if len(payload) > MAX_OUTPUT_BYTES:
+                    break
+
+        if reached_eof and len(payload) <= MAX_OUTPUT_BYTES:
+            remaining = max(0.0, deadline - time.monotonic())
+            try:
+                valid = process.wait(timeout=remaining) == 0
+            except subprocess.TimeoutExpired:
+                valid = False
+    finally:
+        tree_clean, had_tree = contain_process_tree(process)
+        if had_tree or not tree_clean:
+            valid = False
+        if process.stdout is not None:
+            process.stdout.close()
+
+    return bytes(payload) if valid else None
+
+
+def validate(collector, payload):
+    process = subprocess.Popen(
+        [collector, "validate", "-"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    valid = False
+    try:
+        try:
+            process.communicate(input=payload, timeout=VALIDATE_TIMEOUT_SECONDS)
+            valid = process.returncode == 0
+        except subprocess.TimeoutExpired:
+            valid = False
+    finally:
+        tree_clean, had_tree = contain_process_tree(process)
+        if had_tree or not tree_clean:
+            valid = False
+        if process.stdin is not None:
+            process.stdin.close()
+    return valid
+
+
+def main():
+    collector = os.environ.get(
+        "HERMARCHY_AGENT_STATE",
+        str(Path.home() / ".local/bin/hermarchy-agent-state"),
+    )
+    if not os.access(collector, os.X_OK):
+        return 1
+    try:
+        enable_subreaper()
+        payload = collect(collector)
+        if payload is None or not validate(collector, payload):
+            return 1
+        sys.stdout.buffer.write(payload)
+        sys.stdout.buffer.flush()
+        return 0
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

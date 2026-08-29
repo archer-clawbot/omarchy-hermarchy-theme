@@ -51,7 +51,9 @@ before another source is considered.
 
 Validation reads at most 64 KiB from stdin or a nonblocking, no-follow regular
 file. Oversized, special-file, invalid UTF-8, malformed, or excessively nested
-inputs are rejected with a controlled error.
+inputs are rejected with a controlled error. RFC 3339 timestamps are checked
+against both the exact grammar and calendar/timezone component bounds; permissive
+`24:00:00` or `+00:60` forms are rejected.
 
 The collector defaults to:
 
@@ -105,9 +107,10 @@ install -Dm755 extras/agent-integration/hermarchy-agent-state \
 mkdir -p "$HOME/.local/state/hermarchy"
 ```
 
-No timer or UI mutation is installed. A future Quickshell widget should consume
-the validated JSON through a user-local plugin or IPC surface rather than
-patching `/usr/share/omarchy/shell`.
+No timer or UI mutation is installed by this adapter-only command. The first
+consumer now lives in `../quickshell/`: a user-local Omarchy plugin that invokes
+the collector, validates the exact output, and renders the semantic signal
+without patching `/usr/share/omarchy/shell`.
 
 ## Tests
 

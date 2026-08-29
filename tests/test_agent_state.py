@@ -727,6 +727,31 @@ class AgentStateContractTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("observedAt must be date-time", result.stderr)
 
+    def test_validator_rejects_out_of_range_rfc3339_components(self):
+        for field, invalid, message in (
+            ("observedAt", "2024-01-01T24:00:00Z", "observedAt must be date-time"),
+            ("observedAt", "2024-01-01T00:00:00+00:60", "observedAt must be date-time"),
+            (
+                "lastActivityAt",
+                "2024-01-01T24:00:00Z",
+                "activity.lastActivityAt must be date-time or null",
+            ),
+            (
+                "lastActivityAt",
+                "2024-01-01T00:00:00+00:60",
+                "activity.lastActivityAt must be date-time or null",
+            ),
+        ):
+            with self.subTest(field=field, invalid=invalid):
+                state = self.collect(self.make_db())
+                if field == "observedAt":
+                    state[field] = invalid
+                else:
+                    state["activity"][field] = invalid
+                result = self.validate_payload(state)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(message, result.stderr)
+
     def test_non_exact_success_reason_never_emits_green(self):
         db = self.make_db()
         with contextlib.closing(sqlite3.connect(db)) as con, con:

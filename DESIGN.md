@@ -95,9 +95,11 @@ A public Omarchy theme must remain safe and portable. It does not:
 - install custom fonts or icons;
 - change compositor behavior.
 
-Optional status scripts are inspectable, user-owned, and read-only. This keeps
-the gallery theme installable while leaving room for deeper agent integration
-on systems that explicitly opt in.
+Optional status scripts and the Quickshell agent plugin are inspectable,
+user-owned, and read-only. The plugin uses Omarchy's supported user-local
+extension point rather than replacing package-owned shell components. This
+keeps the gallery theme installable while leaving room for deeper agent
+integration on systems that explicitly opt in.
 
 ## Agent-state invariant
 

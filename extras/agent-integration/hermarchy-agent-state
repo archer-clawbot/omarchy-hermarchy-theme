@@ -39,7 +39,9 @@ MAX_TASK_LENGTH = 512
 MAX_DETAIL_LENGTH = 2048
 MAX_ID_LENGTH = 256
 RFC3339_PATTERN = re.compile(
-    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+    r"^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})"
+    r"T(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})"
+    r"(?:\.\d+)?(?:Z|[+-](?P<offset_hour>\d{2}):(?P<offset_minute>\d{2}))$"
 )
 
 
@@ -48,11 +50,21 @@ def iso_time(epoch):
 
 
 def is_date_time(value):
-    if not isinstance(value, str) or RFC3339_PATTERN.fullmatch(value) is None:
+    if not isinstance(value, str):
+        return False
+    match = RFC3339_PATTERN.fullmatch(value)
+    if match is None:
         return False
     try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return parsed.tzinfo is not None
+        components = {name: int(match.group(name)) for name in (
+            "year", "month", "day", "hour", "minute", "second"
+        )}
+        offset_hour = int(match.group("offset_hour") or 0)
+        offset_minute = int(match.group("offset_minute") or 0)
+        if offset_hour > 23 or offset_minute > 59:
+            return False
+        datetime(**components, tzinfo=timezone.utc)
+        return True
     except ValueError:
         return False
 

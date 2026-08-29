@@ -1,0 +1,504 @@
+#!/usr/bin/env python3
+"""Transactionally install the validated Hermarchy Quickshell plugin."""
+
+import errno
+import os
+import secrets
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+PLUGIN_ID = "io.github.archer-clawbot.hermarchy-agent"
+COLLECTOR_NAME = "hermarchy-agent-state"
+DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+MAX_SOURCE_BYTES = 1_048_576
+PLUGIN_FILES = {
+    "manifest.json": 0o644,
+    "StateModel.js": 0o644,
+    "BarWidget.qml": 0o644,
+    "Panel.qml": 0o644,
+    "scripts/hermarchy-state-read": 0o755,
+}
+
+
+class InstallError(RuntimeError):
+    def __init__(self, message, returncode=1):
+        super().__init__(message)
+        self.returncode = returncode
+
+
+def read_regular_nofollow(path):
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_SOURCE_BYTES:
+            raise InstallError(f"refusing non-regular or oversized source: {path}")
+        chunks = []
+        remaining = MAX_SOURCE_BYTES + 1
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        payload = b"".join(chunks)
+        if len(payload) > MAX_SOURCE_BYTES:
+            raise InstallError(f"refusing oversized source: {path}")
+        return payload
+    finally:
+        os.close(descriptor)
+
+
+def open_absolute_directory_nofollow(path):
+    path = Path(path)
+    if not path.is_absolute() or path == Path("/"):
+        raise InstallError("HOME must be an absolute non-root directory")
+    descriptor = os.open("/", DIRECTORY_FLAGS)
+    try:
+        for component in path.parts[1:]:
+            next_descriptor = os.open(component, DIRECTORY_FLAGS, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except Exception:
+        os.close(descriptor)
+        raise
+
+
+def same_directory(left, right):
+    left_stat = os.fstat(left)
+    right_stat = os.fstat(right)
+    return (left_stat.st_dev, left_stat.st_ino) == (right_stat.st_dev, right_stat.st_ino)
+
+
+def ensure_directory(parent_fd, name, mode=0o755):
+    try:
+        os.mkdir(name, mode=mode, dir_fd=parent_fd)
+    except FileExistsError:
+        pass
+    return os.open(name, DIRECTORY_FLAGS, dir_fd=parent_fd)
+
+
+def lstat_at(parent_fd, name):
+    try:
+        return os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return None
+
+
+def write_new_file(parent_fd, name, payload, mode):
+    descriptor = os.open(
+        name,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        mode,
+        dir_fd=parent_fd,
+    )
+    try:
+        view = memoryview(payload)
+        while view:
+            written = os.write(descriptor, view)
+            view = view[written:]
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def remove_entry(parent_fd, name):
+    metadata = lstat_at(parent_fd, name)
+    if metadata is None:
+        return
+    if not stat.S_ISDIR(metadata.st_mode):
+        os.unlink(name, dir_fd=parent_fd)
+        return
+    descriptor = os.open(name, DIRECTORY_FLAGS, dir_fd=parent_fd)
+    try:
+        for entry in os.scandir(descriptor):
+            remove_entry(descriptor, entry.name)
+    finally:
+        os.close(descriptor)
+    os.rmdir(name, dir_fd=parent_fd)
+
+
+def assert_tree_has_no_symlinks(parent_fd, name):
+    metadata = lstat_at(parent_fd, name)
+    if metadata is None:
+        return
+    if stat.S_ISLNK(metadata.st_mode):
+        raise InstallError(f"refusing symlinked install path component: {name}")
+    if not stat.S_ISDIR(metadata.st_mode):
+        raise InstallError(f"refusing non-directory plugin destination: {name}")
+    descriptor = os.open(name, DIRECTORY_FLAGS, dir_fd=parent_fd)
+    try:
+        for entry in os.scandir(descriptor):
+            entry_stat = os.stat(entry.name, dir_fd=descriptor, follow_symlinks=False)
+            if stat.S_ISLNK(entry_stat.st_mode):
+                raise InstallError(f"refusing symlink in plugin destination: {entry.name}")
+            if stat.S_ISDIR(entry_stat.st_mode):
+                assert_tree_has_no_symlinks(descriptor, entry.name)
+            elif not stat.S_ISREG(entry_stat.st_mode):
+                raise InstallError(f"refusing special file in plugin destination: {entry.name}")
+    finally:
+        os.close(descriptor)
+
+
+def unique_name(prefix):
+    return f".{prefix}.{os.getpid()}.{secrets.token_hex(8)}"
+
+
+def build_plugin_tree(plugins_fd, payloads):
+    temporary_name = unique_name(f"{PLUGIN_ID}.new")
+    os.mkdir(temporary_name, mode=0o700, dir_fd=plugins_fd)
+    plugin_fd = os.open(temporary_name, DIRECTORY_FLAGS, dir_fd=plugins_fd)
+    try:
+        scripts_fd = ensure_directory(plugin_fd, "scripts")
+        try:
+            for relative, mode in PLUGIN_FILES.items():
+                if relative.startswith("scripts/"):
+                    write_new_file(scripts_fd, relative.split("/", 1)[1], payloads[relative], mode)
+                else:
+                    write_new_file(plugin_fd, relative, payloads[relative], mode)
+        finally:
+            os.close(scripts_fd)
+        os.fchmod(plugin_fd, 0o755)
+        os.fsync(plugin_fd)
+    except Exception:
+        os.close(plugin_fd)
+        remove_entry(plugins_fd, temporary_name)
+        raise
+    os.close(plugin_fd)
+    return temporary_name
+
+
+def build_collector_file(bin_fd, payload):
+    temporary_name = unique_name(f"{COLLECTOR_NAME}.new")
+    write_new_file(bin_fd, temporary_name, payload, 0o755)
+    return temporary_name
+
+
+def read_regular_at(parent_fd, name):
+    descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_SOURCE_BYTES:
+            raise InstallError(f"refusing non-regular or oversized installed file: {name}")
+        payload = bytearray()
+        while len(payload) <= MAX_SOURCE_BYTES:
+            chunk = os.read(descriptor, min(65_536, MAX_SOURCE_BYTES + 1 - len(payload)))
+            if not chunk:
+                break
+            payload.extend(chunk)
+        if len(payload) > MAX_SOURCE_BYTES:
+            raise InstallError(f"refusing oversized installed file: {name}")
+        return bytes(payload)
+    finally:
+        os.close(descriptor)
+
+
+def read_installed_plugin(plugin_fd):
+    if {entry.name for entry in os.scandir(plugin_fd)} != {
+        "manifest.json", "StateModel.js", "BarWidget.qml", "Panel.qml", "scripts"
+    }:
+        raise InstallError("installed plugin file set does not match staged payload")
+    scripts_fd = os.open("scripts", DIRECTORY_FLAGS, dir_fd=plugin_fd)
+    try:
+        if {entry.name for entry in os.scandir(scripts_fd)} != {"hermarchy-state-read"}:
+            raise InstallError("installed plugin scripts do not match staged payload")
+        payloads = {
+            "scripts/hermarchy-state-read": read_regular_at(
+                scripts_fd, "hermarchy-state-read"
+            )
+        }
+    finally:
+        os.close(scripts_fd)
+    for name in ("manifest.json", "StateModel.js", "BarWidget.qml", "Panel.qml"):
+        payloads[name] = read_regular_at(plugin_fd, name)
+    return payloads
+
+
+def write_staging_tree(staging, payloads):
+    staging = Path(staging)
+    (staging / "scripts").mkdir(mode=0o755)
+    for relative, mode in PLUGIN_FILES.items():
+        destination = staging / relative
+        destination.write_bytes(payloads[relative])
+        destination.chmod(mode)
+
+
+def run_omarchy(arguments, pass_fds=()):
+    result = subprocess.run(["omarchy", *arguments], pass_fds=pass_fds)
+    if result.returncode != 0:
+        raise InstallError("Omarchy command failed", result.returncode)
+
+
+def restore_entry(parent_fd, name, backup):
+    displaced = unique_name(f"{name}.failed")
+    if lstat_at(parent_fd, name) is not None:
+        os.rename(name, displaced, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+    if backup is not None:
+        os.rename(backup, name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+    remove_entry(parent_fd, displaced)
+
+
+def rollback(
+    bin_fd,
+    plugins_fd,
+    collector_backup,
+    plugin_backup,
+    collector_touched,
+    plugin_touched,
+):
+    if plugin_touched:
+        restore_entry(plugins_fd, PLUGIN_ID, plugin_backup)
+    if collector_touched:
+        restore_entry(bin_fd, COLLECTOR_NAME, collector_backup)
+
+
+def verify_current_destinations(
+    home_fd,
+    local_fd,
+    bin_fd,
+    config_fd,
+    omarchy_fd,
+    plugins_fd,
+    installed_collector_fd,
+    installed_plugin_fd,
+    collector_payload,
+    plugin_payloads,
+):
+    opened = []
+
+    def open_expected(parent_fd, name, expected_fd, label, flags=DIRECTORY_FLAGS):
+        descriptor = os.open(name, flags, dir_fd=parent_fd)
+        opened.append(descriptor)
+        if not same_directory(expected_fd, descriptor):
+            raise InstallError(f"{label} changed during validation")
+        return descriptor
+
+    try:
+        current_local_fd = open_expected(home_fd, ".local", local_fd, ".local")
+        current_bin_fd = open_expected(current_local_fd, "bin", bin_fd, ".local/bin")
+        current_config_fd = open_expected(home_fd, ".config", config_fd, ".config")
+        current_omarchy_fd = open_expected(
+            current_config_fd, "omarchy", omarchy_fd, ".config/omarchy"
+        )
+        current_plugins_fd = open_expected(
+            current_omarchy_fd,
+            "plugins",
+            plugins_fd,
+            ".config/omarchy/plugins",
+        )
+        open_expected(
+            current_bin_fd,
+            COLLECTOR_NAME,
+            installed_collector_fd,
+            "installed collector path",
+            os.O_RDONLY | os.O_NOFOLLOW,
+        )
+        if read_regular_at(current_bin_fd, COLLECTOR_NAME) != collector_payload:
+            raise InstallError("installed collector changed during validation")
+        current_plugin_fd = open_expected(
+            current_plugins_fd,
+            PLUGIN_ID,
+            installed_plugin_fd,
+            "installed plugin path",
+        )
+        if read_installed_plugin(current_plugin_fd) != plugin_payloads:
+            raise InstallError("installed plugin changed during validation")
+    finally:
+        for descriptor in reversed(opened):
+            os.close(descriptor)
+
+
+def install_transaction(home_fd, collector_payload, plugin_payloads, home_path=None):
+    local_fd = ensure_directory(home_fd, ".local")
+    config_fd = ensure_directory(home_fd, ".config")
+    try:
+        bin_fd = ensure_directory(local_fd, "bin")
+        omarchy_fd = ensure_directory(config_fd, "omarchy")
+        try:
+            plugins_fd = ensure_directory(omarchy_fd, "plugins")
+            try:
+                collector_stat = lstat_at(bin_fd, COLLECTOR_NAME)
+                if collector_stat is not None and not stat.S_ISREG(collector_stat.st_mode):
+                    raise InstallError("refusing non-regular collector destination")
+                assert_tree_has_no_symlinks(plugins_fd, PLUGIN_ID)
+
+                new_collector = None
+                new_plugin = None
+                collector_backup = None
+                plugin_backup = None
+                collector_touched = False
+                plugin_touched = False
+                try:
+                    new_collector = build_collector_file(bin_fd, collector_payload)
+                    new_plugin = build_plugin_tree(plugins_fd, plugin_payloads)
+
+                    if collector_stat is not None:
+                        collector_backup = unique_name(f"{COLLECTOR_NAME}.backup")
+                        os.rename(
+                            COLLECTOR_NAME,
+                            collector_backup,
+                            src_dir_fd=bin_fd,
+                            dst_dir_fd=bin_fd,
+                        )
+                    collector_touched = True
+                    os.rename(new_collector, COLLECTOR_NAME, src_dir_fd=bin_fd, dst_dir_fd=bin_fd)
+                    new_collector = None
+                    if read_regular_at(bin_fd, COLLECTOR_NAME) != collector_payload:
+                        raise InstallError("installed collector bytes differ from staged payload")
+
+                    if lstat_at(plugins_fd, PLUGIN_ID) is not None:
+                        plugin_backup = unique_name(f"{PLUGIN_ID}.backup")
+                        os.rename(PLUGIN_ID, plugin_backup, src_dir_fd=plugins_fd, dst_dir_fd=plugins_fd)
+                    plugin_touched = True
+                    os.rename(new_plugin, PLUGIN_ID, src_dir_fd=plugins_fd, dst_dir_fd=plugins_fd)
+                    new_plugin = None
+
+                    installed_collector_fd = os.open(
+                        COLLECTOR_NAME, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=bin_fd
+                    )
+                    installed_fd = None
+                    try:
+                        installed_fd = os.open(
+                            PLUGIN_ID, DIRECTORY_FLAGS, dir_fd=plugins_fd
+                        )
+                        installed_payloads = read_installed_plugin(installed_fd)
+                        if installed_payloads != plugin_payloads:
+                            raise InstallError("installed plugin bytes differ from staged payload")
+                        with tempfile.TemporaryDirectory(
+                            prefix="hermarchy-installed.", dir="/tmp"
+                        ) as installed_staging:
+                            write_staging_tree(installed_staging, installed_payloads)
+                            run_omarchy(["plugin", "validate", installed_staging])
+
+                        verify_current_destinations(
+                            home_fd,
+                            local_fd,
+                            bin_fd,
+                            config_fd,
+                            omarchy_fd,
+                            plugins_fd,
+                            installed_collector_fd,
+                            installed_fd,
+                            collector_payload,
+                            plugin_payloads,
+                        )
+
+                        if home_path is not None:
+                            current_home_fd = open_absolute_directory_nofollow(home_path)
+                            try:
+                                if not same_directory(home_fd, current_home_fd):
+                                    raise InstallError(
+                                        "HOME changed during installed validation"
+                                    )
+                            finally:
+                                os.close(current_home_fd)
+                    finally:
+                        if installed_fd is not None:
+                            os.close(installed_fd)
+                        os.close(installed_collector_fd)
+                except BaseException:
+                    rollback_error = None
+                    try:
+                        rollback(
+                            bin_fd,
+                            plugins_fd,
+                            collector_backup,
+                            plugin_backup,
+                            collector_touched,
+                            plugin_touched,
+                        )
+                    except Exception as error:
+                        rollback_error = error
+                    if new_collector is not None:
+                        remove_entry(bin_fd, new_collector)
+                    if new_plugin is not None:
+                        remove_entry(plugins_fd, new_plugin)
+                    if rollback_error is not None:
+                        raise InstallError("installation rollback failed") from rollback_error
+                    raise
+
+                if collector_backup is not None:
+                    remove_entry(bin_fd, collector_backup)
+                if plugin_backup is not None:
+                    remove_entry(plugins_fd, plugin_backup)
+                os.fsync(bin_fd)
+                os.fsync(plugins_fd)
+            finally:
+                os.close(plugins_fd)
+        finally:
+            os.close(omarchy_fd)
+            os.close(bin_fd)
+    finally:
+        os.close(config_fd)
+        os.close(local_fd)
+
+
+def main(argv):
+    if argv not in ([], ["--no-enable"]):
+        print(f"usage: {sys.argv[0]} [--no-enable]", file=sys.stderr)
+        return 2
+    enable = not argv
+    if shutil.which("omarchy") is None:
+        raise InstallError("omarchy is required to validate the plugin")
+
+    helper_path = Path(__file__)
+    plugin_dir = helper_path.parent.parent
+    repo_dir = plugin_dir.parent.parent
+    collector_payload = read_regular_nofollow(
+        repo_dir / "extras/agent-integration/hermarchy-agent-state"
+    )
+    plugin_payloads = {
+        relative: read_regular_nofollow(plugin_dir / relative)
+        for relative in PLUGIN_FILES
+    }
+
+    home_text = os.environ.get("HOME", "")
+    home_fd = open_absolute_directory_nofollow(home_text)
+    try:
+        home_identity = os.fstat(home_fd)
+        with tempfile.TemporaryDirectory(prefix="hermarchy-plugin.", dir="/tmp") as staging:
+            write_staging_tree(staging, plugin_payloads)
+            run_omarchy(["plugin", "validate", staging])
+
+        checked_home_fd = open_absolute_directory_nofollow(home_text)
+        try:
+            checked_identity = os.fstat(checked_home_fd)
+            if (home_identity.st_dev, home_identity.st_ino) != (
+                checked_identity.st_dev,
+                checked_identity.st_ino,
+            ):
+                raise InstallError("HOME changed during staged validation")
+        finally:
+            os.close(checked_home_fd)
+
+        install_transaction(home_fd, collector_payload, plugin_payloads, home_text)
+    finally:
+        os.close(home_fd)
+
+    if enable:
+        run_omarchy(["shell", "shell", "rescanPlugins"])
+        run_omarchy(["plugin", "enable", PLUGIN_ID, "--before", "omarchy.agents"])
+
+    destination = Path(home_text) / ".config/omarchy/plugins" / PLUGIN_ID
+    print(f"Installed {PLUGIN_ID} at {destination}")
+    if not enable:
+        print(f"Enable later with: omarchy plugin enable {PLUGIN_ID} --before omarchy.agents")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main(sys.argv[1:]))
+    except InstallError as error:
+        print(error, file=sys.stderr)
+        raise SystemExit(error.returncode)
+    except OSError as error:
+        if error.errno in (errno.ELOOP, errno.ENOTDIR):
+            print("refusing symlinked or non-directory install path", file=sys.stderr)
+        else:
+            print(error, file=sys.stderr)
+        raise SystemExit(1)
