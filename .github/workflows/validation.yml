@@ -29,7 +29,7 @@ jobs:
             qml6-module-qtquick \
             qml6-module-qtquick-window \
             qml6-module-qttest \
-            qt6-declarative-dev-tools
+            qt6-declarative-dev
 
       - name: Provide unit-test command shims
         run: |
