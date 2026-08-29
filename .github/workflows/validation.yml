@@ -29,6 +29,18 @@ jobs:
             qml6-module-qttest \
             qt6-declarative-dev-tools
 
+      - name: Provide unit-test command shims
+        run: |
+          install -d "$RUNNER_TEMP/hermarchy-ci-bin"
+          printf '#!/usr/bin/env sh\nexit 0\n' \
+            > "$RUNNER_TEMP/hermarchy-ci-bin/hermes"
+          printf '#!/usr/bin/env sh\n[ "$1 $2" = "plugin validate" ]\n' \
+            > "$RUNNER_TEMP/hermarchy-ci-bin/omarchy"
+          chmod 755 \
+            "$RUNNER_TEMP/hermarchy-ci-bin/hermes" \
+            "$RUNNER_TEMP/hermarchy-ci-bin/omarchy"
+          echo "$RUNNER_TEMP/hermarchy-ci-bin" >> "$GITHUB_PATH"
+
       - name: Run Python unit tests with warnings as errors
         env:
           PYTHONWARNINGS: error
